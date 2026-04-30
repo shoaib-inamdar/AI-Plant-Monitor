@@ -51,6 +51,7 @@ def generate_sensor_reading():
     #Timestamp
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    pressure = float(f"{pressure:.2f}")  # ensure always 2 decimal places
     readings = {"timestamp":timestamp, "temperature":temperature, "humidity":humidity, "air_quality":aqi, "rain":rain, "pressure":pressure}
     return readings
 
