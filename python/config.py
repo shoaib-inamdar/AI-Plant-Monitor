@@ -14,7 +14,7 @@ READ_INTERVAL_SECONDS=2
 GEMINI_API_KEY=os.getenv("GEMINI_API_KEY")
 GROQ_API_KEY=os.getenv("GROQ_API_KEY")
 
-AI_MODEL="gemini-1.5-flash"
+AI_MODEL="gemini-2.5-flash"
 USE_BACKUP_AI=False
 
 TEMP_MIN = 0         # °C — below this is definitely wrong
@@ -28,3 +28,6 @@ PRES_MAX = 1100      # hPa
 
 CSV_LOG_PATH = "data/sensor_logs/sensor_data.csv"
 MEMORY_FILE_PATH = "data/luna_memory.json"
+
+AI_CALL_INTERVAL=30
+MAX_RETRIES=3

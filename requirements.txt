@@ -1,5 +1,5 @@
 pyserial          # Reads data from Arduino via USB
-google-generativeai  # Google Gemini AI API
+google-genai  # Google Gemini AI API
 python-dotenv     # Reads your .env secret key file
 vosk              # Speech-to-text (listens to you)
 schedule          # Runs tasks on a timer
