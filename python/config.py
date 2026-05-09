@@ -31,3 +31,24 @@ MEMORY_FILE_PATH = "data/luna_memory.json"
 
 AI_CALL_INTERVAL=30
 MAX_RETRIES=3
+# voice settings #
+
+# path to piper executable 
+PIPER_EXE_PATH = r"C:\piper\piper.exe"
+
+# path to Piper voice model
+PIPER_VOICE_MODEL = "voice/piper_voices/en_US-lessac-medium.onnx"
+
+# path to Vosk speech recognition model
+VOSK_MODEL_PATH = "voice/vosk_model/vosk-model-small-en-us-0.15"
+
+# audio settings  #
+
+# sample rate for microphone input (vosk expects 16000 Hz)
+AUDIO_SAMPLE_RATE = 16000
+
+# size of each audio chunk read from mic
+AUDIO_CHUNK_SIZE = 4096
+
+# maximum time to listen before stopping
+LISTEN_TIMEOUT_SECONDS = 10
