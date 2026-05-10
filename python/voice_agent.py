@@ -34,7 +34,6 @@ except ImportError:
     )
 
 
-# ---------------- TTS ----------------
 class PiperTTS:
     def __init__(self):
         self.available = True
@@ -97,7 +96,6 @@ class PiperTTS:
             print(f"⚠️ TTS error: {e}")
 
 
-# ---------------- STT ----------------
 class VoskSTT:
     def __init__(self):
         self.available = False
@@ -167,7 +165,6 @@ class VoskSTT:
             audio.terminate()
 
 
-# ---------------- WRAPPER ----------------
 class LunaVoice:
     def __init__(self):
         self.tts = PiperTTS()
@@ -196,3 +193,30 @@ class LunaVoice:
             speech_text = "I have nothing to say right now."
 
         self.speak(speech_text)
+
+
+if __name__ == "__main__":
+    print("🌿 Testing Luna Voice Agent\n")
+
+    voice = LunaVoice()
+
+    # --- Test TTS ---
+    print("\n--- TTS Test ---")
+    voice.speak("Hello! I am Luna, your plant friend. I am feeling wonderful today!")
+    print("TTS test done.\n")
+
+    # --- Test STT (optional) ---
+    answer = input("Test speech recognition too? (y/n): ").strip().lower()
+    if answer == "y":
+        print("\n--- STT Test ---")
+        print("Say something to Luna...")
+        heard = voice.listen()
+        if heard:
+            print(f"You said: '{heard}'")
+            voice.speak(f"I heard you say: {heard}")
+        else:
+            print("Nothing detected.")
+    else:
+        print("Skipping STT test.")
+
+    print("\n✅ Voice agent test complete!")

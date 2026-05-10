@@ -33,14 +33,14 @@ AI_CALL_INTERVAL=30
 MAX_RETRIES=3
 # voice settings #
 
-# path to piper executable 
-PIPER_EXE_PATH = r"C:\piper\piper.exe"
+# path to piper executable (inside the project piper/ folder)
+PIPER_EXE_PATH = os.path.join(_project_root, "piper", "piper.exe")
 
 # path to Piper voice model
-PIPER_VOICE_MODEL = "voice/piper_voices/en_US-lessac-medium.onnx"
+PIPER_VOICE_MODEL = os.path.join(_project_root, "voice", "piper_voices", "en_US-lessac-medium.onnx")
 
 # path to Vosk speech recognition model
-VOSK_MODEL_PATH = "voice/vosk_model/vosk-model-small-en-us-0.15"
+VOSK_MODEL_PATH = os.path.join(_project_root, "voice", "vosk_model", "vosk-model-small-en-us-0.15")
 
 # audio settings  #
 
