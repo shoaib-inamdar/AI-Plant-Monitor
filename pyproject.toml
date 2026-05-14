@@ -15,3 +15,24 @@ dependencies = [
     "schedule>=1.2.2",
     "vosk>=0.3.45",
 ]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+src = ["python", "."]   # Important for your project structure
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "B", "I", "UP", "SIM", "PL", "RUF"
+]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
