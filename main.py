@@ -11,6 +11,7 @@ from python.voice_agent import LunaVoice
 from python.config import AI_CALL_INTERVAL
 from python.ai_brain import LunaBrain
 from python.serial_reader import SerialReader
+from python.memory import LunaMemory
 
 
 def main():
@@ -20,6 +21,7 @@ def main():
     reader = SerialReader(use_simulator=True)
     brain = LunaBrain()
     voice = LunaVoice()
+    memory=LunaMemory()
 
     print("🌱 Luna is awake and listening to her senses...")
 
@@ -32,6 +34,7 @@ def main():
             reading_count += 1
 
             if reading is not None:
+                memory.add_reading(reading)
                 print(f"📡 Reading #{reading_count}: Temp={reading['temperature']}°C, Hum={reading['humidity']}%")
 
                 current_time = time.time()
@@ -43,6 +46,11 @@ def main():
                     response = brain.analyse(reading)
 
                     if response is not None:
+                        memory.add_ai_response(response)
+
+                        if reading_count%5==0:
+                            print(memory.get_summary_text())
+                            
                         print(brain.format_response(response))
                         voice.speak_response(response)
                         last_ai_call_time = current_time
