@@ -1,4 +1,4 @@
-name: Lint & Format (Ruff + Black)
+name: Auto Fix & Lint (Ruff + Black)
 
 on:
   push:
@@ -6,19 +6,20 @@ on:
     paths:
       - '**.py'
       - 'pyproject.toml'
-      - 'requirements.txt'
+      - 'requirements*.txt'
       - 'uv.lock'
-      - '.github/workflows/lint-and-format.yml'
 
-  pull_request:
-    branches: [ main ]
+permissions:
+  contents: write   # Important: Allows the workflow to commit changes
 
 jobs:
-  ruff-black:
+  autofix:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}   # Needed to push changes
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -31,12 +32,30 @@ jobs:
           python -m pip install --upgrade pip
           pip install ruff black
 
-      - name: Run Black (Check Formatting)
-        run: black --check --diff .
+      - name: Run Black (Auto Format)
+        run: black .
 
-      - name: Run Ruff (Linting)
-        run: ruff check .
+      - name: Run Ruff (Auto Fix + Format)
+        run: |
+          ruff check --fix .
+          ruff format .
 
-      # Optional but Recommended: Also check with Ruff's formatter
-      - name: Run Ruff Format Check
-        run: ruff format --check .
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected - will commit"
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit & Push fixes (if any)
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "style: auto-fix code with Black + Ruff"
+          git push
