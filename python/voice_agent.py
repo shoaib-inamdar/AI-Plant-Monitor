@@ -12,7 +12,14 @@ import wave
 import io
 import threading
 
-import pyaudio
+try:
+    import pyaudio
+    PYAUDIO_AVAILABLE = True
+except ImportError:
+    pyaudio = None
+    PYAUDIO_AVAILABLE = False
+    print("⚠️  pyaudio not installed — voice playback/recording unavailable")
+    print("   Install with: uv pip install pipwin && uv run pipwin install pyaudio")
 
 try:
     from python.config import (
@@ -24,6 +31,7 @@ try:
         LISTEN_TIMEOUT_SECONDS,
     )
 except ImportError:
+    # pyrefly: ignore [missing-import]
     from config import (
         PIPER_EXE_PATH,
         PIPER_VOICE_MODEL,
@@ -57,41 +65,34 @@ class PiperTTS:
             print(f"[TTS unavailable] {text}")
             return
 
+        if not PYAUDIO_AVAILABLE:
+            print(f"[Audio unavailable] Luna would say: {text}")
+            return
+
         try:
             result = subprocess.run(
-                [
-                    PIPER_EXE_PATH,
-                    "--model",
-                    PIPER_VOICE_MODEL,
-                    "--output-raw"
-                ],
+                [PIPER_EXE_PATH, "--model", PIPER_VOICE_MODEL, "--output-raw"],
                 input=text.encode("utf-8"),
                 capture_output=True,
                 timeout=30
             )
 
             audio_bytes = result.stdout
-
             if not audio_bytes:
-                print("⚠️ No audio output")
+                print("⚠️ Piper produced no audio — check DLL files in piper/ folder")
                 return
 
-            audio = pyaudio.PyAudio()
-            stream = audio.open(
-                format=pyaudio.paInt16,
-                channels=1,
-                rate=22050,
-                output=True
-            )
-
+            pa = pyaudio.PyAudio()
+            stream = pa.open(format=pyaudio.paInt16, channels=1,
+                             rate=22050, output=True)
             stream.write(audio_bytes)
-
             stream.stop_stream()
             stream.close()
-            audio.terminate()
-
+            pa.terminate()
             print("🔊 Luna spoke")
 
+        except subprocess.TimeoutExpired:
+            print("⚠️ Piper timed out")
         except Exception as e:
             print(f"⚠️ TTS error: {e}")
 
@@ -121,11 +122,15 @@ class VoskSTT:
             print("[STT unavailable] Type instead:")
             return input().strip()
 
-        audio = pyaudio.PyAudio()
+        if not PYAUDIO_AVAILABLE:
+            print("[Audio unavailable] Type your message instead:")
+            return input().strip()
+
+        pa = pyaudio.PyAudio()
         stream = None
 
         try:
-            stream = audio.open(
+            stream = pa.open(
                 format=pyaudio.paInt16,
                 channels=1,
                 rate=AUDIO_SAMPLE_RATE,
@@ -162,7 +167,7 @@ class VoskSTT:
             if stream:
                 stream.stop_stream()
                 stream.close()
-            audio.terminate()
+            pa.terminate()
 
 
 class LunaVoice:

@@ -12,6 +12,7 @@ from python.config import AI_CALL_INTERVAL
 from python.ai_brain import LunaBrain
 from python.serial_reader import SerialReader
 from python.memory import LunaMemory
+from python.health_scorer import HealthScorer
 
 
 def main():
@@ -22,6 +23,7 @@ def main():
     brain = LunaBrain()
     voice = LunaVoice()
     memory=LunaMemory()
+    scorer=HealthScorer()
 
     print("🌱 Luna is awake and listening to her senses...")
 
@@ -35,6 +37,13 @@ def main():
 
             if reading is not None:
                 memory.add_reading(reading)
+                score_result=scorer.calculate_score(reading)
+                if score_result is not None:
+                    print(scorer.format_score(score_result))
+
+                    for alert in score_result["alerts"]:
+                        print(alert)
+                        voice.speak(alert)
                 print(f"📡 Reading #{reading_count}: Temp={reading['temperature']}°C, Hum={reading['humidity']}%")
 
                 current_time = time.time()
@@ -43,7 +52,13 @@ def main():
                 if time_since_last_call >= AI_CALL_INTERVAL:
                     print("🧠 Asking Luna what she thinks...")
 
-                    response = brain.analyse(reading)
+                    # Enrich reading with rule-based score so Gemini has context
+                    enriched = reading.copy()
+                    if score_result is not None:
+                        enriched["rule_based_score"] = score_result["score"]
+                        enriched["rule_based_status"] = score_result["status"]
+
+                    response = brain.analyse(enriched)
 
                     if response is not None:
                         memory.add_ai_response(response)

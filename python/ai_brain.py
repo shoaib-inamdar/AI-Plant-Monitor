@@ -9,6 +9,7 @@ import google.genai as genai
 try:
     from python.config import GEMINI_API_KEY, GROQ_API_KEY,AI_MODEL,USE_BACKUP_AI,MAX_RETRIES
 except ImportError:
+    # pyrefly: ignore [missing-import]
     from config import GEMINI_API_KEY,GROQ_API_KEY,AI_MODEL,USE_BACKUP_AI,MAX_RETRIES
 
 
@@ -53,20 +54,31 @@ class LunaBrain():
 
         print("🧠 Luna's AI brain initialised")
 
-    def _build_prompt(self,reading):
-        """Purpose: Format the sensor reading as a clear message to send to Gemini"""
+    def _build_prompt(self, reading):
+        """Format the sensor reading as a clear message to send to Gemini."""
 
-        return (
-        "Current sensor readings for Luna:\n"
-        f"Timestamp: {reading['timestamp']}\n"
-        f"Temperature: {reading['temperature']}°C\n"
-        f"Humidity: {reading['humidity']}%\n"
-        f"Air Quality: {reading['air_quality']} ppm\n"
-        f"Rain detected: {'Yes' if reading['rain'] == 1 else 'No'}\n"
-        f"Barometric Pressure: {reading['pressure']} hPa\n"
-        f"Sensor status: {reading['status']}\n\n"
-        "Please analyse these readings and respond with your JSON assessment."
+        prompt = (
+            "Current sensor readings for Luna:\n"
+            f"Timestamp: {reading['timestamp']}\n"
+            f"Temperature: {reading['temperature']}°C\n"
+            f"Humidity: {reading['humidity']}%\n"
+            f"Air Quality: {reading['air_quality']} ppm\n"
+            f"Rain detected: {'Yes' if reading['rain'] == 1 else 'No'}\n"
+            f"Barometric Pressure: {reading['pressure']} hPa\n"
+            f"Sensor status: {reading['status']}\n"
         )
+
+        # Include rule-based score if main.py enriched the reading with it
+        if "rule_based_score" in reading:
+            prompt += (
+                f"Rule-based health score: {reading['rule_based_score']}/100 "
+                f"({reading['rule_based_status']})\n"
+                "Please consider this score in your assessment.\n"
+            )
+
+        prompt += "\nPlease analyse these readings and respond with your JSON assessment."
+        return prompt
+
     
     def analyse(self, reading):
         """ Purpose: Send a reading to Gemini and get Luna's response back"""

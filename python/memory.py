@@ -38,7 +38,10 @@ class LunaMemory:
 
         try:
             with open(MEMORY_FILE_PATH, "r", encoding="utf-8") as f:
-                data = json.load(f)
+                content = f.read().strip()
+                if not content:          # empty file — treat as fresh start
+                    return
+                data = json.loads(content)
 
             for item in data.get("readings", []):
                 self.readings.append(item)
