@@ -13,6 +13,7 @@ from python.ai_brain import LunaBrain
 from python.serial_reader import SerialReader
 from python.memory import LunaMemory
 from python.health_scorer import HealthScorer
+from python.scheduler import Scheduler
 
 
 def main():
@@ -22,8 +23,16 @@ def main():
     reader = SerialReader(use_simulator=True)
     brain = LunaBrain()
     voice = LunaVoice()
-    memory=LunaMemory()
-    scorer=HealthScorer()
+    memory = LunaMemory()
+    scorer = HealthScorer()
+    scheduler = Scheduler(memory)
+
+    # Generate (or load) today's care plan at startup
+    if scheduler.today_plan is None:
+        print("📅 Generating today's care plan...")
+        scheduler.generate_plan()
+    print(scheduler.get_plan_summary())
+    print()
 
     print("🌱 Luna is awake and listening to her senses...")
 
@@ -40,10 +49,19 @@ def main():
                 score_result=scorer.calculate_score(reading)
                 if score_result is not None:
                     print(scorer.format_score(score_result))
-
                     for alert in score_result["alerts"]:
                         print(alert)
                         voice.speak(alert)
+
+                # Check for due tasks every 10 readings
+                if reading_count % 10 == 0:
+                    due_tasks = scheduler.get_due_tasks()
+                    if due_tasks:
+                        print(f"📅 {len(due_tasks)} care task(s) due now:")
+                        for task in due_tasks:
+                            print(f"   → [{task['priority'].upper()}] {task['action']}")
+                        voice.speak(f"Reminder: {due_tasks[0]['action']}")
+
                 print(f"📡 Reading #{reading_count}: Temp={reading['temperature']}°C, Hum={reading['humidity']}%")
 
                 current_time = time.time()

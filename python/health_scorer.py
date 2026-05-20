@@ -2,7 +2,6 @@ import sys
 
 # UTF-8 fix (must be first)
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
-    # BUG FIX 1: was `error="replace"` (wrong kwarg name) — correct is `errors="replace"`
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 from datetime import datetime
@@ -29,7 +28,6 @@ class HealthScorer:
         self.score_history = deque(maxlen=MAX_SCORE_HISTORY)
         print("🩺 Health Scorer ready")
 
-    # ── SENSOR SCORING FUNCTIONS ──────────────────────────────────────────────
 
     def _score_temperature(self, temp):
         """Score temperature 0 → WEIGHT_TEMP (30 pts)."""
@@ -64,14 +62,10 @@ class HealthScorer:
         distance = (1000 - pressure) if pressure < 1000 else (pressure - 1020)
         return max(0, WEIGHT_PRES - distance * 0.5)
 
-    # ── ALERT DETECTION ───────────────────────────────────────────────────────
 
     def _check_alerts(self, reading):
         """Detect urgent alert conditions regardless of score."""
 
-        # BUG FIX 2: was initialising alerts list as:
-        #   alerts=[alerts.append(...)]  ← NameError + appended to undefined name
-        # Must start with an empty list first.
         alerts = []
 
         if reading["temperature"] > ALERT_TEMP_HIGH:
@@ -82,7 +76,6 @@ class HealthScorer:
             alerts.append(
                 f"🚨 CRITICAL: Temperature {reading['temperature']}°C — dangerously cold!"
             )
-        # BUG FIX 3: was comparing humidity against ALERT_TEMP_LOW (wrong constant!)
         if reading["humidity"] < ALERT_HUM_LOW:
             alerts.append(
                 f"🚨 CRITICAL: Humidity {reading['humidity']}% — drought conditions!"
@@ -94,7 +87,6 @@ class HealthScorer:
 
         return alerts
 
-    # ── MAIN CALCULATE ────────────────────────────────────────────────────────
 
     def calculate_score(self, reading):
         """Calculate full health score for one reading."""
@@ -135,7 +127,6 @@ class HealthScorer:
         self.score_history.append(result)
         return result
 
-    # ── TREND ─────────────────────────────────────────────────────────────────
 
     def get_score_trend(self):
         """Is Luna's health improving or getting worse?"""
@@ -152,7 +143,6 @@ class HealthScorer:
         if diff < -3:  return "declining 📉"
         return "stable ➡️"
 
-    # ── FORMAT ────────────────────────────────────────────────────────────────
 
     def format_score(self, result):
         """Pretty-print the score result for the terminal."""
@@ -175,7 +165,7 @@ class HealthScorer:
         return "\n".join(lines)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+
 if __name__ == "__main__":
     print("🧪 Testing Health Scorer Module\n")
     scorer = HealthScorer()
