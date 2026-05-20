@@ -1,4 +1,4 @@
-import sys, os, time
+import time
 from datetime import datetime
 
 # --- Dual-import pattern ---
@@ -6,17 +6,33 @@ from datetime import datetime
 try:
     # When imported from root: "from python.serial_reader import SerialReader"
     from python.config import (
-        READ_INTERVAL_SECONDS, SERIAL_PORT, BAUD_RATE,
-        TEMP_MIN, TEMP_MAX, HUM_MIN, HUM_MAX,
-        AQI_MIN, AQI_MAX, PRES_MIN, PRES_MAX
+        AQI_MAX,
+        AQI_MIN,
+        BAUD_RATE,
+        HUM_MAX,
+        HUM_MIN,
+        PRES_MAX,
+        PRES_MIN,
+        READ_INTERVAL_SECONDS,
+        SERIAL_PORT,
+        TEMP_MAX,
+        TEMP_MIN,
     )
     from python.sensor_simulator import SimulatedSerial
 except ImportError:
     # When run directly: "uv run python python/serial_reader.py"
     from config import (
-        READ_INTERVAL_SECONDS, SERIAL_PORT, BAUD_RATE,
-        TEMP_MIN, TEMP_MAX, HUM_MIN, HUM_MAX,
-        AQI_MIN, AQI_MAX, PRES_MIN, PRES_MAX
+        AQI_MAX,
+        AQI_MIN,
+        BAUD_RATE,
+        HUM_MAX,
+        HUM_MIN,
+        PRES_MAX,
+        PRES_MIN,
+        READ_INTERVAL_SECONDS,
+        SERIAL_PORT,
+        TEMP_MAX,
+        TEMP_MIN,
     )
     from sensor_simulator import SimulatedSerial
 
@@ -25,29 +41,31 @@ try:
 except ImportError:
     SerialException = Exception  # fallback if pyserial not installed
 
-class SerialReader():
+
+class SerialReader:
     def __init__(self, use_simulator=True):
-        
+
         if use_simulator:
-            self.serial=SimulatedSerial()
-            print( "📡 Using simulated sensor data")
+            self.serial = SimulatedSerial()
+            print("📡 Using simulated sensor data")
         else:
             try:
                 import serial
-                self.serial=serial.Serial(SERIAL_PORT,BAUD_RATE,timeout=1)
+
+                self.serial = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
                 print(f"📡 Connected to real Arduino on {SERIAL_PORT}")
-            
+
             except SerialException:
                 print(f"❌ Failed to open {SERIAL_PORT}\nFalling back to simulator.")
 
-        self.last_reading=None
+        self.last_reading = None
 
     def read_raw_line(self):
         if not self.serial.is_open:
             return None
-        
+
         try:
-            raw_line=self.serial.readline().decode("utf-8").strip()
+            raw_line = self.serial.readline().decode("utf-8").strip()
             if not raw_line:
                 return None
             else:
@@ -64,13 +82,13 @@ class SerialReader():
                 if ":" not in p:
                     continue
 
-                key, value = p.split(":", 1)   # ✅ FIXED
+                key, value = p.split(":", 1)  # ✅ FIXED
                 key = key.strip()
                 value = value.strip()
 
                 data[key] = value
 
-        # ✅ Move this OUTSIDE loop
+            # ✅ Move this OUTSIDE loop
             temperature = float(data["TEMP"])
             humidity = float(data["HUM"])
             air_quality = int(data["AIR"])
@@ -85,10 +103,10 @@ class SerialReader():
                 "humidity": humidity,
                 "air_quality": air_quality,
                 "rain": rain,
-                "pressure": pressure
+                "pressure": pressure,
             }
 
-            return reading   # ✅ IMPORTANT
+            return reading  # ✅ IMPORTANT
 
         except Exception as error:
             print(f"⚠️ Failed to parse line: '{raw_line}' — {error}")
@@ -129,8 +147,6 @@ class SerialReader():
             reading["status"] = "error"
             return reading
 
-
-
     def get_reading(self):
         raw_line = self.read_raw_line()
         if raw_line is None:
@@ -147,7 +163,6 @@ class SerialReader():
 
         return validated
 
-
     def close(self):
         if self.serial and self.serial.is_open:
             self.serial.close()
@@ -155,11 +170,11 @@ class SerialReader():
 
 
 if __name__ == "__main__":
-    reader=SerialReader(use_simulator=True)
+    reader = SerialReader(use_simulator=True)
     try:
         while True:
-            reading=reader.get_reading()
-        
+            reading = reader.get_reading()
+
             if reading is not None:
                 print(f"[{reading['timestamp']}] Status: {reading['status']}")
                 print(f"  🌡️  Temp: {reading['temperature']}°C")
@@ -171,9 +186,9 @@ if __name__ == "__main__":
             else:
                 print("⚠️ No reading received")
             time.sleep(READ_INTERVAL_SECONDS)
-    
+
     except KeyboardInterrupt:
         print("\n🚫 Program interrupted by user")
-    
+
     finally:
         reader.close()

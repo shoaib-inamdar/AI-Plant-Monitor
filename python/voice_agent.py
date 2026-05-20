@@ -4,16 +4,14 @@ import sys
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-import os
 import json
+import os
 import subprocess
 import time
-import wave
-import io
-import threading
 
 try:
     import pyaudio
+
     PYAUDIO_AVAILABLE = True
 except ImportError:
     pyaudio = None
@@ -23,22 +21,22 @@ except ImportError:
 
 try:
     from python.config import (
+        AUDIO_CHUNK_SIZE,
+        AUDIO_SAMPLE_RATE,
+        LISTEN_TIMEOUT_SECONDS,
         PIPER_EXE_PATH,
         PIPER_VOICE_MODEL,
         VOSK_MODEL_PATH,
-        AUDIO_SAMPLE_RATE,
-        AUDIO_CHUNK_SIZE,
-        LISTEN_TIMEOUT_SECONDS,
     )
 except ImportError:
     # pyrefly: ignore [missing-import]
     from config import (
+        AUDIO_CHUNK_SIZE,
+        AUDIO_SAMPLE_RATE,
+        LISTEN_TIMEOUT_SECONDS,
         PIPER_EXE_PATH,
         PIPER_VOICE_MODEL,
         VOSK_MODEL_PATH,
-        AUDIO_SAMPLE_RATE,
-        AUDIO_CHUNK_SIZE,
-        LISTEN_TIMEOUT_SECONDS,
     )
 
 
@@ -74,7 +72,7 @@ class PiperTTS:
                 [PIPER_EXE_PATH, "--model", PIPER_VOICE_MODEL, "--output-raw"],
                 input=text.encode("utf-8"),
                 capture_output=True,
-                timeout=30
+                timeout=30,
             )
 
             audio_bytes = result.stdout
@@ -83,8 +81,9 @@ class PiperTTS:
                 return
 
             pa = pyaudio.PyAudio()
-            stream = pa.open(format=pyaudio.paInt16, channels=1,
-                             rate=22050, output=True)
+            stream = pa.open(
+                format=pyaudio.paInt16, channels=1, rate=22050, output=True
+            )
             stream.write(audio_bytes)
             stream.stop_stream()
             stream.close()
@@ -135,7 +134,7 @@ class VoskSTT:
                 channels=1,
                 rate=AUDIO_SAMPLE_RATE,
                 input=True,
-                frames_per_buffer=AUDIO_CHUNK_SIZE
+                frames_per_buffer=AUDIO_CHUNK_SIZE,
             )
 
             print("🎙️ Listening...")

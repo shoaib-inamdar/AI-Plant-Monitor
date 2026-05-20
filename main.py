@@ -4,16 +4,15 @@ import sys
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-import os
 import time
 
-from python.voice_agent import LunaVoice
-from python.config import AI_CALL_INTERVAL
 from python.ai_brain import LunaBrain
-from python.serial_reader import SerialReader
-from python.memory import LunaMemory
+from python.config import AI_CALL_INTERVAL
 from python.health_scorer import HealthScorer
+from python.memory import LunaMemory
 from python.scheduler import Scheduler
+from python.serial_reader import SerialReader
+from python.voice_agent import LunaVoice
 
 
 def main():
@@ -46,7 +45,7 @@ def main():
 
             if reading is not None:
                 memory.add_reading(reading)
-                score_result=scorer.calculate_score(reading)
+                score_result = scorer.calculate_score(reading)
                 if score_result is not None:
                     print(scorer.format_score(score_result))
                     for alert in score_result["alerts"]:
@@ -62,7 +61,9 @@ def main():
                             print(f"   → [{task['priority'].upper()}] {task['action']}")
                         voice.speak(f"Reminder: {due_tasks[0]['action']}")
 
-                print(f"📡 Reading #{reading_count}: Temp={reading['temperature']}°C, Hum={reading['humidity']}%")
+                print(
+                    f"📡 Reading #{reading_count}: Temp={reading['temperature']}°C, Hum={reading['humidity']}%"
+                )
 
                 current_time = time.time()
                 time_since_last_call = current_time - last_ai_call_time
@@ -81,9 +82,9 @@ def main():
                     if response is not None:
                         memory.add_ai_response(response)
 
-                        if reading_count%5==0:
+                        if reading_count % 5 == 0:
                             print(memory.get_summary_text())
-                            
+
                         print(brain.format_response(response))
                         voice.speak_response(response)
                         last_ai_call_time = current_time

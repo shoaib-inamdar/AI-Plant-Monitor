@@ -1,19 +1,32 @@
 import sys
+
 # Fix emoji display on Windows PowerShell when running this file directly
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-import os, json, time
-import google.genai as genai
+import json
+import time
+
+from google import genai
 
 try:
-    from python.config import GEMINI_API_KEY, GROQ_API_KEY,AI_MODEL,USE_BACKUP_AI,MAX_RETRIES
+    from python.config import (
+        AI_MODEL,
+        GEMINI_API_KEY,
+        GROQ_API_KEY,
+        MAX_RETRIES,
+        USE_BACKUP_AI,
+    )
 except ImportError:
     # pyrefly: ignore [missing-import]
-    from config import GEMINI_API_KEY,GROQ_API_KEY,AI_MODEL,USE_BACKUP_AI,MAX_RETRIES
+    from config import (
+        AI_MODEL,
+        GEMINI_API_KEY,
+        MAX_RETRIES,
+    )
 
 
-LUNA_SYSTEM_PROMPT="""
+LUNA_SYSTEM_PROMPT = """
 You are Luna, a wise and gentle plant who monitors her own environment.
 
 You speak in first person as the plant — warm, calm, slightly poetic, but also practical.
@@ -46,10 +59,11 @@ Sensor ranges reference:
 - Pressure: 1000-1020 hPa normal
 """
 
-class LunaBrain():
+
+class LunaBrain:
     def __init__(self):
         self.client = genai.Client(api_key=GEMINI_API_KEY)
-        self.model_name = AI_MODEL  
+        self.model_name = AI_MODEL
         self.last_response = None
 
         print("🧠 Luna's AI brain initialised")
@@ -76,73 +90,75 @@ class LunaBrain():
                 "Please consider this score in your assessment.\n"
             )
 
-        prompt += "\nPlease analyse these readings and respond with your JSON assessment."
+        prompt += (
+            "\nPlease analyse these readings and respond with your JSON assessment."
+        )
         return prompt
 
-    
     def analyse(self, reading):
-        """ Purpose: Send a reading to Gemini and get Luna's response back"""
+        """Purpose: Send a reading to Gemini and get Luna's response back"""
 
         if reading is None:
             return None
 
-        prompt=self._build_prompt(reading)
-        full_prompt=LUNA_SYSTEM_PROMPT+"\n\n"+prompt
+        prompt = self._build_prompt(reading)
+        full_prompt = LUNA_SYSTEM_PROMPT + "\n\n" + prompt
 
         for attempt in range(MAX_RETRIES):
             try:
                 response = self.client.models.generate_content(
-                    model=self.model_name,
-                    contents=full_prompt
+                    model=self.model_name, contents=full_prompt
                 )
 
-                response_text=response.text.strip()
+                response_text = response.text.strip()
 
                 if response_text.startswith("```"):
-                    lines=response_text.splitlines()
-                    lines=lines[1:-1]
-                    response_text="\n".join(lines).strip()
-                
-                parsed=json.loads(response_text)
-                required=["health_score", "status", "message", "actions", "reason"]
+                    lines = response_text.splitlines()
+                    lines = lines[1:-1]
+                    response_text = "\n".join(lines).strip()
+
+                parsed = json.loads(response_text)
+                required = ["health_score", "status", "message", "actions", "reason"]
 
                 for field in required:
                     if field not in parsed:
                         raise ValueError(f"Missing field:{field}")
 
-                self.last_response=parsed
+                self.last_response = parsed
                 return parsed
 
             except json.JSONDecodeError:
-                print(f"⚠️ Attempt {attempt+1}: Gemini returned invalid JSON. Retrying...")
+                print(
+                    f"⚠️ Attempt {attempt + 1}: Gemini returned invalid JSON. Retrying..."
+                )
                 time.sleep(1)
 
             except Exception as error:
-                print(f"⚠️ Attempt {attempt+1}: API error — {error}")
+                print(f"⚠️ Attempt {attempt + 1}: API error — {error}")
                 time.sleep(2)
 
         print("❌ All retries failed. Using fallback response.")
-        return{
+        return {
             "health_score": 50,
             "status": "unknown",
             "message": "I'm having trouble thinking right now. Please check my connections.",
             "actions": ["check system", "retry later"],
-            "reason": "AI brain temporarily unavailable"
+            "reason": "AI brain temporarily unavailable",
         }
-        
+
     def explain_decision(self):
         """Purpose: Explainable AI — Why did you say that?"""
 
         if self.last_response is None:
             return "I haven't analysed any readings yet."
-        
-        response=self.last_response
 
-        actions_text=""
+        response = self.last_response
+
+        actions_text = ""
         for action in response["actions"]:
-            actions_text+=f"  → {action}\n"
-        
-        return(
+            actions_text += f"  → {action}\n"
+
+        return (
             "🌿 Luna's Last Assessment:\n"
             f"Health Score: {response['health_score']}/100\n"
             f"Status: {response['status'].upper()}\n\n"
@@ -152,7 +168,7 @@ class LunaBrain():
             f"{actions_text}"
         )
 
-    def format_response(self,response):
+    def format_response(self, response):
         """Purpose: Pretty-print a response for the terminal"""
         if response is None:
             return "No response"
@@ -171,28 +187,28 @@ class LunaBrain():
             actions_text += f"  • {action}\n"
 
         return (
-        f"{indicator} Health Score: {score}/100\n"
-        f"Status: {response['status'].upper()}\n\n"
-        f"🌱 Luna says: \"{response['message']}\"\n\n"
-        "🔧 Actions:\n"
-        f"{actions_text}"
+            f"{indicator} Health Score: {score}/100\n"
+            f"Status: {response['status'].upper()}\n\n"
+            f'🌱 Luna says: "{response["message"]}"\n\n'
+            "🔧 Actions:\n"
+            f"{actions_text}"
         )
 
 
-if __name__ =="__main__":
-    fake_reading={
+if __name__ == "__main__":
+    fake_reading = {
         "timestamp": "2026-05-01 10:00:00",
-         "temperature": 32.0,     
-         "humidity": 22.0,        
-         "air_quality": 650,
-         "rain": 0,
-         "pressure": 1010.50,
-         "status": "ok"
+        "temperature": 32.0,
+        "humidity": 22.0,
+        "air_quality": 650,
+        "rain": 0,
+        "pressure": 1010.50,
+        "status": "ok",
     }
 
-    brain=LunaBrain()
+    brain = LunaBrain()
     print("Sending reading to Luna's AI brain...")
-    response=brain.analyse(fake_reading)
+    response = brain.analyse(fake_reading)
     print(brain.format_response(response))
     print("\n\n")
     print(brain.explain_decision())

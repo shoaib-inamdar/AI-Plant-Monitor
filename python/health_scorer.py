@@ -4,22 +4,44 @@ import sys
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-from datetime import datetime
 from collections import deque
+from datetime import datetime
 
 try:
     from python.config import (
-        IDEAL_TEMP_MIN, IDEAL_TEMP_MAX, IDEAL_HUM_MIN, IDEAL_HUM_MAX,
-        IDEAL_AQI_MAX, WEIGHT_TEMP, WEIGHT_HUM, WEIGHT_AQI, WEIGHT_RAIN,
-        WEIGHT_PRES, ALERT_TEMP_HIGH, ALERT_TEMP_LOW, ALERT_HUM_LOW,
-        ALERT_AQI_HIGH, MAX_SCORE_HISTORY
+        ALERT_AQI_HIGH,
+        ALERT_HUM_LOW,
+        ALERT_TEMP_HIGH,
+        ALERT_TEMP_LOW,
+        IDEAL_AQI_MAX,
+        IDEAL_HUM_MAX,
+        IDEAL_HUM_MIN,
+        IDEAL_TEMP_MAX,
+        IDEAL_TEMP_MIN,
+        MAX_SCORE_HISTORY,
+        WEIGHT_AQI,
+        WEIGHT_HUM,
+        WEIGHT_PRES,
+        WEIGHT_RAIN,
+        WEIGHT_TEMP,
     )
 except ImportError:
     from config import (
-        IDEAL_TEMP_MIN, IDEAL_TEMP_MAX, IDEAL_HUM_MIN, IDEAL_HUM_MAX,
-        IDEAL_AQI_MAX, WEIGHT_TEMP, WEIGHT_HUM, WEIGHT_AQI, WEIGHT_RAIN,
-        WEIGHT_PRES, ALERT_TEMP_HIGH, ALERT_TEMP_LOW, ALERT_HUM_LOW,
-        ALERT_AQI_HIGH, MAX_SCORE_HISTORY
+        ALERT_AQI_HIGH,
+        ALERT_HUM_LOW,
+        ALERT_TEMP_HIGH,
+        ALERT_TEMP_LOW,
+        IDEAL_AQI_MAX,
+        IDEAL_HUM_MAX,
+        IDEAL_HUM_MIN,
+        IDEAL_TEMP_MAX,
+        IDEAL_TEMP_MIN,
+        MAX_SCORE_HISTORY,
+        WEIGHT_AQI,
+        WEIGHT_HUM,
+        WEIGHT_PRES,
+        WEIGHT_RAIN,
+        WEIGHT_TEMP,
     )
 
 
@@ -27,7 +49,6 @@ class HealthScorer:
     def __init__(self):
         self.score_history = deque(maxlen=MAX_SCORE_HISTORY)
         print("🩺 Health Scorer ready")
-
 
     def _score_temperature(self, temp):
         """Score temperature 0 → WEIGHT_TEMP (30 pts)."""
@@ -62,7 +83,6 @@ class HealthScorer:
         distance = (1000 - pressure) if pressure < 1000 else (pressure - 1020)
         return max(0, WEIGHT_PRES - distance * 0.5)
 
-
     def _check_alerts(self, reading):
         """Detect urgent alert conditions regardless of score."""
 
@@ -87,26 +107,30 @@ class HealthScorer:
 
         return alerts
 
-
     def calculate_score(self, reading):
         """Calculate full health score for one reading."""
         if reading is None:
             return None
 
         temp_score = self._score_temperature(reading["temperature"])
-        hum_score  = self._score_humidity(reading["humidity"])
-        aqi_score  = self._score_air_quality(reading["air_quality"])
+        hum_score = self._score_humidity(reading["humidity"])
+        aqi_score = self._score_air_quality(reading["air_quality"])
         rain_score = self._score_rain(reading["rain"])
         pres_score = self._score_pressure(reading["pressure"])
 
         total = round(temp_score + hum_score + aqi_score + rain_score + pres_score)
         total = max(0, min(100, total))
 
-        if total >= 85:   status = "excellent"
-        elif total >= 70: status = "good"
-        elif total >= 50: status = "mild_stress"
-        elif total >= 30: status = "stressed"
-        else:             status = "critical"
+        if total >= 85:
+            status = "excellent"
+        elif total >= 70:
+            status = "good"
+        elif total >= 50:
+            status = "mild_stress"
+        elif total >= 30:
+            status = "stressed"
+        else:
+            status = "critical"
 
         alerts = self._check_alerts(reading)
 
@@ -117,16 +141,15 @@ class HealthScorer:
             "alerts": alerts,
             "breakdown": {
                 "temperature": round(temp_score, 1),
-                "humidity":    round(hum_score, 1),
+                "humidity": round(hum_score, 1),
                 "air_quality": round(aqi_score, 1),
-                "rain":        round(rain_score, 1),
-                "pressure":    round(pres_score, 1),
-            }
+                "rain": round(rain_score, 1),
+                "pressure": round(pres_score, 1),
+            },
         }
 
         self.score_history.append(result)
         return result
-
 
     def get_score_trend(self):
         """Is Luna's health improving or getting worse?"""
@@ -135,14 +158,15 @@ class HealthScorer:
             return "insufficient data"
 
         mid = len(recent) // 2
-        avg_first  = sum(r["score"] for r in recent[:mid]) / mid
+        avg_first = sum(r["score"] for r in recent[:mid]) / mid
         avg_second = sum(r["score"] for r in recent[mid:]) / (len(recent) - mid)
         diff = avg_second - avg_first
 
-        if diff > 3:   return "improving 📈"
-        if diff < -3:  return "declining 📉"
+        if diff > 3:
+            return "improving 📈"
+        if diff < -3:
+            return "declining 📉"
         return "stable ➡️"
-
 
     def format_score(self, result):
         """Pretty-print the score result for the terminal."""
@@ -165,21 +189,47 @@ class HealthScorer:
         return "\n".join(lines)
 
 
-
 if __name__ == "__main__":
     print("🧪 Testing Health Scorer Module\n")
     scorer = HealthScorer()
 
     scenarios = [
-        ("Test 1 — Perfect conditions",
-         {"temperature": 22, "humidity": 60, "air_quality": 400,
-          "rain": 1, "pressure": 1013, "timestamp": str(datetime.now()), "status": "ok"}),
-        ("Test 2 — Stressed plant",
-         {"temperature": 33, "humidity": 25, "air_quality": 700,
-          "rain": 0, "pressure": 1013, "timestamp": str(datetime.now()), "status": "ok"}),
-        ("Test 3 — Critical emergency",
-         {"temperature": 40, "humidity": 12, "air_quality": 1500,
-          "rain": 0, "pressure": 1013, "timestamp": str(datetime.now()), "status": "ok"}),
+        (
+            "Test 1 — Perfect conditions",
+            {
+                "temperature": 22,
+                "humidity": 60,
+                "air_quality": 400,
+                "rain": 1,
+                "pressure": 1013,
+                "timestamp": str(datetime.now()),
+                "status": "ok",
+            },
+        ),
+        (
+            "Test 2 — Stressed plant",
+            {
+                "temperature": 33,
+                "humidity": 25,
+                "air_quality": 700,
+                "rain": 0,
+                "pressure": 1013,
+                "timestamp": str(datetime.now()),
+                "status": "ok",
+            },
+        ),
+        (
+            "Test 3 — Critical emergency",
+            {
+                "temperature": 40,
+                "humidity": 12,
+                "air_quality": 1500,
+                "rain": 0,
+                "pressure": 1013,
+                "timestamp": str(datetime.now()),
+                "status": "ok",
+            },
+        ),
     ]
 
     for label, reading in scenarios:

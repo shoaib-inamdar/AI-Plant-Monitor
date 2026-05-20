@@ -1,6 +1,6 @@
-import sys
-import os
 import json
+import os
+import sys
 import time
 
 # UTF-8 fix (must be first)
@@ -11,18 +11,32 @@ from datetime import datetime
 
 try:
     from python.config import (
-        CARE_PLAN_FILE, AI_MODEL, GEMINI_API_KEY,
-        MORNING_START, MORNING_END, AFTERNOON_START, AFTERNOON_END,
-        EVENING_START, EVENING_END, MAX_RETRIES
+        AFTERNOON_END,
+        AFTERNOON_START,
+        AI_MODEL,
+        CARE_PLAN_FILE,
+        EVENING_END,
+        EVENING_START,
+        GEMINI_API_KEY,
+        MAX_RETRIES,
+        MORNING_END,
+        MORNING_START,
     )
 except ImportError:
     from config import (
-        CARE_PLAN_FILE, AI_MODEL, GEMINI_API_KEY,
-        MORNING_START, MORNING_END, AFTERNOON_START, AFTERNOON_END,
-        EVENING_START, EVENING_END, MAX_RETRIES
+        AFTERNOON_END,
+        AFTERNOON_START,
+        AI_MODEL,
+        CARE_PLAN_FILE,
+        EVENING_END,
+        EVENING_START,
+        GEMINI_API_KEY,
+        MAX_RETRIES,
+        MORNING_END,
+        MORNING_START,
     )
 
-import google.genai as genai
+from google import genai
 
 # ── SYSTEM PROMPT ─────────────────────────────────────────────────────────────
 # BUG FIX 1: Prompt used single quotes inside the JSON template, which is
@@ -76,7 +90,7 @@ class Scheduler:
         try:
             # BUG FIX 2: `try` was missing its colon → SyntaxError
             # BUG FIX 3: `json(file)` is not valid — must be `json.load(file)`
-            with open(CARE_PLAN_FILE, "r", encoding="utf-8") as file:
+            with open(CARE_PLAN_FILE, encoding="utf-8") as file:
                 content = file.read().strip()
                 if not content:
                     return
@@ -137,8 +151,7 @@ class Scheduler:
                 # BUG FIX 7: `generate_cotent` is a typo → `generate_content`
                 # BUG FIX 8: first arg must be keyword `model=`, not positional
                 response = self.client.models.generate_content(
-                    model=AI_MODEL,
-                    contents=full_prompt
+                    model=AI_MODEL, contents=full_prompt
                 )
 
                 # BUG FIX 9: `response.summary_text` doesn't exist → `response.text`
@@ -173,7 +186,9 @@ class Scheduler:
                 return parsed
 
             except json.JSONDecodeError:
-                print(f"⚠️ Attempt {attempt + 1}: Gemini returned invalid JSON. Retrying...")
+                print(
+                    f"⚠️ Attempt {attempt + 1}: Gemini returned invalid JSON. Retrying..."
+                )
                 time.sleep(1)
 
             except Exception as error:
@@ -208,7 +223,8 @@ class Scheduler:
         # tasks that ARE done (truthy), not ones that are NOT done.
         # Should be `not task.get("done", False)`.
         return [
-            task for task in self.today_plan["tasks"]
+            task
+            for task in self.today_plan["tasks"]
             if task.get("time") == current_period and not task.get("done", False)
         ]
 
