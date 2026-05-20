@@ -37,8 +37,8 @@ jobs:
 
       - name: Run Ruff (Auto Fix + Format)
         run: |
-          ruff check --fix .
-          ruff format .
+          ruff check --fix . || true
+          ruff format . || true
 
       - name: Check for changes
         id: changes

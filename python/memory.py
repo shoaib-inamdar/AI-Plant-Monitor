@@ -4,19 +4,24 @@ import sys
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-import os, json
-from datetime import datetime
+import json
+import os
 from collections import deque
+from datetime import datetime
 
 try:
     from python.config import (
-        MEMORY_FILE_PATH, MAX_READINGSZ_IN_MEMORY,
-        MAX_AI_RESPONSES_IN_MEMORY, TREND_WINDOW
+        MAX_AI_RESPONSES_IN_MEMORY,
+        MAX_READINGSZ_IN_MEMORY,
+        MEMORY_FILE_PATH,
+        TREND_WINDOW,
     )
 except ImportError:
     from config import (
-        MEMORY_FILE_PATH, MAX_READINGSZ_IN_MEMORY,
-        MAX_AI_RESPONSES_IN_MEMORY, TREND_WINDOW
+        MAX_AI_RESPONSES_IN_MEMORY,
+        MAX_READINGSZ_IN_MEMORY,
+        MEMORY_FILE_PATH,
+        TREND_WINDOW,
     )
 
 
@@ -29,7 +34,6 @@ class LunaMemory:
         self._load()
         print("💾 Memory system ready")
 
-
     def _load(self):
         """Load saved data from luna_memory.json on startup."""
 
@@ -37,9 +41,9 @@ class LunaMemory:
             return
 
         try:
-            with open(MEMORY_FILE_PATH, "r", encoding="utf-8") as f:
+            with open(MEMORY_FILE_PATH, encoding="utf-8") as f:
                 content = f.read().strip()
-                if not content:          # empty file — treat as fresh start
+                if not content:  # empty file — treat as fresh start
                     return
                 data = json.loads(content)
 
@@ -48,7 +52,6 @@ class LunaMemory:
 
             for item in data.get("ai_responses", []):
                 self.ai_responses.append(item)
-
 
             self.daily_summaries = data.get("daily_summaries", {})
 
@@ -68,12 +71,11 @@ class LunaMemory:
             "readings": list(self.readings),
             "ai_responses": list(self.ai_responses),
             "daily_summaries": self.daily_summaries,
-            "last_saved": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            "last_saved": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
 
         with open(MEMORY_FILE_PATH, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
-
 
     def add_reading(self, reading):
         """Store a new sensor reading in memory."""
@@ -88,7 +90,6 @@ class LunaMemory:
         self._update_daily_summary(today, reading)
         self._save()
 
-
     def add_ai_response(self, response):
         """Store a new AI response in memory."""
 
@@ -100,7 +101,6 @@ class LunaMemory:
         self.ai_responses.append(response_with_time)
         self._save()
 
-
     def _update_daily_summary(self, date_str, reading):
         """Update running totals for a given day."""
 
@@ -111,7 +111,7 @@ class LunaMemory:
                 "hum_sum": 0.0,
                 "aqi_sum": 0,
                 "rain_count": 0,
-                "date": date_str
+                "date": date_str,
             }
 
         day = self.daily_summaries[date_str]
@@ -121,7 +121,6 @@ class LunaMemory:
         day["hum_sum"] += reading["humidity"]
         day["aqi_sum"] += reading["air_quality"]
         day["rain_count"] += reading["rain"]
-
 
     def get_daily_summary(self, date_str=None):
         """Get calculated averages for a given day."""
@@ -144,14 +143,12 @@ class LunaMemory:
             "avg_temperature": round(day["temp_sum"] / count, 1),
             "avg_humidity": round(day["hum_sum"] / count, 1),
             "avg_air_quality": round(day["aqi_sum"] / count),
-            "rain_events": day["rain_count"]
+            "rain_events": day["rain_count"],
         }
-
 
     def get_recent_readings(self, n=10):
         """Return the last n readings as a list."""
         return list(self.readings)[-n:]
-
 
     def get_trend(self, field="temperature"):
         """Detect if a field is rising, falling, or stable."""
@@ -176,7 +173,6 @@ class LunaMemory:
             return "falling"
         else:
             return "stable"
-
 
     def get_summary_text(self):
         """Generate a human-readable summary of current memory state."""
@@ -210,7 +206,6 @@ class LunaMemory:
         return "\n".join(lines)
 
 
-
 if __name__ == "__main__":
     memory = LunaMemory()
     print("Testing memory system...\n")
@@ -223,7 +218,7 @@ if __name__ == "__main__":
             "air_quality": 420 + (i * 5),
             "rain": 0,
             "pressure": 1013.0,
-            "status": "ok"
+            "status": "ok",
         }
         memory.add_reading(fake_reading)
         print(f"Added reading {i + 1}: Temp={fake_reading['temperature']}°C")
