@@ -1,9 +1,8 @@
-import sys
-import os
 import json
+import os
+import sys
 import time
 
-from datetime import datetime
 from google import genai
 
 # UTF-8 fix
@@ -11,12 +10,9 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 from config import (
-    HEALING_THRESHOLD_SCORE,
-    HEALING_TRIGGER_COUNT,
-    HEALING_COOLDOWN_MINUTES,
-    INCIDENTS_FILE,
     AI_MODEL,
     GEMINI_API_KEY,
+    INCIDENTS_FILE,
     MAX_RETRIES,
 )
 
@@ -60,7 +56,7 @@ class SelfHealer:
             return
 
         try:
-            with open(INCIDENTS_FILE, "r", encoding="utf-8") as file:
+            with open(INCIDENTS_FILE, encoding="utf-8") as file:
                 content = file.read().strip()
 
                 if not content:
@@ -70,9 +66,7 @@ class SelfHealer:
 
                 self.incidents = parsed.get("incidents", [])
 
-                print(
-                    f"🔄 Loaded {len(self.incidents)} past incidents"
-                )
+                print(f"🔄 Loaded {len(self.incidents)} past incidents")
 
         except Exception as error:
             print(f"⚠️ Incident load error: {error}")
@@ -83,26 +77,12 @@ class SelfHealer:
         if folder:
             os.makedirs(folder, exist_ok=True)
 
-        data = {
-            "incidents": self.incidents
-        }
+        data = {"incidents": self.incidents}
 
-        with open(
-            INCIDENTS_FILE,
-            "w",
-            encoding="utf-8"
-        ) as file:
-            json.dump(
-                data,
-                file,
-                indent=2
-            )
+        with open(INCIDENTS_FILE, "w", encoding="utf-8") as file:
+            json.dump(data, file, indent=2)
 
-    def _detect_trigger(
-        self,
-        reading,
-        score_result
-    ):
+    def _detect_trigger(self, reading, score_result):
         if reading["temperature"] > 32:
             return "heat_stress"
 
@@ -114,12 +94,7 @@ class SelfHealer:
 
         return "general"
 
-    def _generate_healing_plan(
-        self,
-        reading,
-        score_result,
-        trigger
-    ):
+    def _generate_healing_plan(self, reading, score_result, trigger):
         crisis_context = (
             f"EMERGENCY: Luna's health score is "
             f"{score_result['score']}/100\n"
@@ -133,26 +108,18 @@ class SelfHealer:
             "recovery actions."
         )
 
-        full_prompt = (
-            HEALER_PROMPT
-            + "\n\n"
-            + crisis_context
-        )
+        full_prompt = HEALER_PROMPT + "\n\n" + crisis_context
 
         for attempt in range(MAX_RETRIES):
             try:
                 response = self.client.models.generate_content(
-                    model=AI_MODEL,
-                    contents=full_prompt
+                    model=AI_MODEL, contents=full_prompt
                 )
 
                 response_text = response.text.strip()
 
                 if response_text.startswith("```json"):
-                    response_text = response_text.replace(
-                        "```json",
-                        ""
-                    )
+                    response_text = response_text.replace("```json", "")
 
                 if response_text.endswith("```"):
                     response_text = response_text[:-3]
@@ -164,17 +131,11 @@ class SelfHealer:
                 return parsed
 
             except json.JSONDecodeError:
-                print(
-                    f"JSON parse failed "
-                    f"(attempt {attempt + 1})"
-                )
+                print(f"JSON parse failed (attempt {attempt + 1})")
                 time.sleep(1)
 
             except Exception as error:
-                print(
-                    f"Healing generation failed: "
-                    f"{error}"
-                )
+                print(f"Healing generation failed: {error}")
                 time.sleep(1)
 
         return None
