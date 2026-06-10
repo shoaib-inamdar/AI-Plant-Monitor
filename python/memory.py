@@ -43,7 +43,7 @@ class LunaMemory:
         try:
             with open(MEMORY_FILE_PATH, encoding="utf-8") as f:
                 content = f.read().strip()
-                if not content:  
+                if not content:
                     return
                 data = json.loads(content)
 
