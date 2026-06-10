@@ -43,7 +43,7 @@ class LunaMemory:
         try:
             with open(MEMORY_FILE_PATH, encoding="utf-8") as f:
                 content = f.read().strip()
-                if not content:  # empty file — treat as fresh start
+                if not content:  
                     return
                 data = json.loads(content)
 
@@ -86,7 +86,7 @@ class LunaMemory:
         self.readings.append(reading)
 
         today = datetime.now().strftime("%Y-%m-%d")
-        # BUG FIX 5: typo — was calling _update_daily_summmary (3 m's)
+
         self._update_daily_summary(today, reading)
         self._save()
 

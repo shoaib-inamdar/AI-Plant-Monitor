@@ -1,10 +1,7 @@
 import time
 from datetime import datetime
 
-# --- Dual-import pattern ---
-# Works whether you run this file directly OR import it from main.py at the root.
 try:
-    # When imported from root: "from python.serial_reader import SerialReader"
     from python.config import (
         AQI_MAX,
         AQI_MIN,
@@ -20,7 +17,6 @@ try:
     )
     from python.sensor_simulator import SimulatedSerial
 except ImportError:
-    # When run directly: "uv run python python/serial_reader.py"
     from config import (
         AQI_MAX,
         AQI_MIN,
@@ -88,7 +84,6 @@ class SerialReader:
 
                 data[key] = value
 
-            # ✅ Move this OUTSIDE loop
             temperature = float(data["TEMP"])
             humidity = float(data["HUM"])
             air_quality = int(data["AIR"])

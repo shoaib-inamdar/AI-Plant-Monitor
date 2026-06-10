@@ -3,7 +3,7 @@ import os
 import sys
 import time
 
-# UTF-8 fix (must be first)
+
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
@@ -38,9 +38,6 @@ except ImportError:
 
 from google import genai
 
-# ── SYSTEM PROMPT ─────────────────────────────────────────────────────────────
-# BUG FIX 1: Prompt used single quotes inside the JSON template, which is
-# invalid JSON. Replaced with double-quotes or backtick-style description.
 CARE_PLAN_SYSTEM_PROMPT = """
 You are Luna, a wise plant who plans her own care for the day.
 
@@ -70,7 +67,7 @@ Rules:
 """
 
 
-# ── CLASS: Scheduler ──────────────────────────────────────────────────────────
+
 class Scheduler:
     def __init__(self, memory):
         self.memory = memory
@@ -80,7 +77,7 @@ class Scheduler:
         self._load_plan()
         print("📅 Scheduler ready")
 
-    # ── LOAD ──────────────────────────────────────────────────────────────────
+
     def _load_plan(self):
         """Load today's plan from disk if it exists."""
 
@@ -88,8 +85,6 @@ class Scheduler:
             return
 
         try:
-            # BUG FIX 2: `try` was missing its colon → SyntaxError
-            # BUG FIX 3: `json(file)` is not valid — must be `json.load(file)`
             with open(CARE_PLAN_FILE, encoding="utf-8") as file:
                 content = file.read().strip()
                 if not content:
@@ -99,7 +94,7 @@ class Scheduler:
             today = datetime.now().strftime("%Y-%m-%d")
             if parsed.get("date") == today:
                 self.today_plan = parsed
-                # BUG FIX 4: `tasks` variable was undefined — must access via parsed
+
                 task_count = len(parsed.get("tasks", []))
                 print(f"📅 Loaded today's care plan ({task_count} tasks)")
             else:
@@ -110,13 +105,10 @@ class Scheduler:
             print(f"⚠️ Could not load care plan: {error}")
             self.today_plan = None
 
-    # ── SAVE ──────────────────────────────────────────────────────────────────
+
     def _save_plan(self):
         """Save current plan to disk."""
 
-        # BUG FIX 5: `os.makedirs()` returns None, not a boolean.
-        # The `if os.makedirs(...)` condition always evaluates to False,
-        # so the file was NEVER being written. Run makedirs separately.
         folder = os.path.dirname(CARE_PLAN_FILE)
         if folder:
             os.makedirs(folder, exist_ok=True)
@@ -124,7 +116,6 @@ class Scheduler:
         with open(CARE_PLAN_FILE, "w", encoding="utf-8") as file:
             json.dump(self.today_plan, file, indent=2)
 
-    # ── GENERATE ──────────────────────────────────────────────────────────────
     def generate_plan(self):
         """Ask Gemini to create today's care plan using memory data."""
 
@@ -135,7 +126,6 @@ class Scheduler:
         context = f"Health memory summary:\n{summary_text}\n"
 
         if today_daily is not None:
-            # BUG FIX 6: `today_date` was used but never defined in original code
             context += (
                 f"\nToday's averages ({today_date}):\n"
                 f"- Avg temp: {today_daily['avg_temperature']}°C\n"
@@ -148,16 +138,12 @@ class Scheduler:
 
         for attempt in range(MAX_RETRIES):
             try:
-                # BUG FIX 7: `generate_cotent` is a typo → `generate_content`
-                # BUG FIX 8: first arg must be keyword `model=`, not positional
                 response = self.client.models.generate_content(
                     model=AI_MODEL, contents=full_prompt
                 )
 
-                # BUG FIX 9: `response.summary_text` doesn't exist → `response.text`
                 response_text = response.text.strip()
 
-                # Strip ```json markdown wrapper if present
                 if response_text.startswith("```"):
                     lines = response_text.splitlines()
                     if len(lines) >= 2:
@@ -166,7 +152,6 @@ class Scheduler:
 
                 parsed = json.loads(response_text)
 
-                # Validate required fields
                 for field in ["date", "tasks", "summary"]:
                     if field not in parsed:
                         raise ValueError(f"Missing field: {field}")
@@ -174,14 +159,12 @@ class Scheduler:
                 if not isinstance(parsed["tasks"], list):
                     raise ValueError("Field 'tasks' must be a list")
 
-                # Ensure every task has a "done" field
                 for task in parsed["tasks"]:
                     task.setdefault("done", False)
 
                 self.today_plan = parsed
                 self._save_plan()
 
-                # BUG FIX 10: `tasks` was undefined — use parsed["tasks"]
                 print(f"📅 Care plan generated: {len(parsed['tasks'])} tasks for today")
                 return parsed
 
@@ -198,7 +181,6 @@ class Scheduler:
         print("❌ Could not generate care plan after all retries.")
         return None
 
-    # ── DUE TASKS ─────────────────────────────────────────────────────────────
     def get_due_tasks(self):
         """Return incomplete tasks scheduled for the current time window."""
 
@@ -219,16 +201,12 @@ class Scheduler:
         if current_period is None:
             return []
 
-        # BUG FIX 11: condition was `task.get("done", False)` — this returns
-        # tasks that ARE done (truthy), not ones that are NOT done.
-        # Should be `not task.get("done", False)`.
         return [
             task
             for task in self.today_plan["tasks"]
             if task.get("time") == current_period and not task.get("done", False)
         ]
 
-    # ── MARK DONE ─────────────────────────────────────────────────────────────
     def mark_task_done(self, task_index):
         """Mark a specific task as completed."""
 
@@ -244,11 +222,9 @@ class Scheduler:
         except IndexError:
             print(f"⚠️ No task at index {task_index}")
 
-    # ── SUMMARY ───────────────────────────────────────────────────────────────
     def get_plan_summary(self):
         """Return a human-readable summary of today's plan."""
 
-        # This method was entirely missing — written from scratch
         if self.today_plan is None:
             return "📅 No care plan for today yet."
 
@@ -279,9 +255,7 @@ class Scheduler:
         )
 
 
-# ── STANDALONE TEST ───────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    # Import memory here so this file is self-contained when run directly
     try:
         from python.memory import LunaMemory
     except ImportError:

@@ -11,6 +11,7 @@ from python.config import AI_CALL_INTERVAL
 from python.health_scorer import HealthScorer
 from python.memory import LunaMemory
 from python.scheduler import Scheduler
+from python.self_healer import SelfHealer
 from python.serial_reader import SerialReader
 from python.voice_agent import LunaVoice
 
@@ -23,8 +24,9 @@ def main():
     brain = LunaBrain()
     voice = LunaVoice()
     memory = LunaMemory()
-    scorer = HealthScorer()
+    scorer    = HealthScorer()
     scheduler = Scheduler(memory)
+    healer    = SelfHealer()
 
     # Generate (or load) today's care plan at startup
     if scheduler.today_plan is None:
@@ -51,6 +53,9 @@ def main():
                     for alert in score_result["alerts"]:
                         print(alert)
                         voice.speak(alert)
+
+                # Run self-healing check on every reading
+                healer.check(reading, score_result, voice)
 
                 # Check for due tasks every 10 readings
                 if reading_count % 10 == 0:

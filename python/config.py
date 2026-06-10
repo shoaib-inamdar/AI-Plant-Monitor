@@ -2,8 +2,6 @@ import os
 
 from dotenv import load_dotenv
 
-# Find the project root (one level up from this config.py file)
-# This ensures .env is always found even when imported from different locations
 _project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(_project_root, ".env"))
 

@@ -1,0 +1,16 @@
+{
+  "incidents": [
+    {
+      "started_at": "2026-06-10 01:47:13",
+      "trigger": "heat_stress",
+      "score_at_start": 55,
+      "actions_generated": [
+        "Immediately move my pot at least 2 meters away from direct sunlight or any heat source (like a radiator or vent) to a cooler, shadier spot.",
+        "Slowly provide 200ml of room-temperature water into my soil, waiting 5 minutes after the first 100ml to ensure proper absorption before adding the rest, until water drains from the bottom.",
+        "Place a shallow tray filled with pebbles and 1-2cm of water directly underneath my pot, ensuring my pot is not sitting directly in the water, and lightly mist my foliage with water."
+      ],
+      "resolved_at": "2026-06-10 01:47:19",
+      "score_at_resolution": 93
+    }
+  ]
+}
