@@ -3,7 +3,6 @@ import os
 import sys
 import time
 
-
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
@@ -67,7 +66,6 @@ Rules:
 """
 
 
-
 class Scheduler:
     def __init__(self, memory):
         self.memory = memory
@@ -76,7 +74,6 @@ class Scheduler:
 
         self._load_plan()
         print("📅 Scheduler ready")
-
 
     def _load_plan(self):
         """Load today's plan from disk if it exists."""
@@ -104,7 +101,6 @@ class Scheduler:
         except Exception as error:
             print(f"⚠️ Could not load care plan: {error}")
             self.today_plan = None
-
 
     def _save_plan(self):
         """Save current plan to disk."""

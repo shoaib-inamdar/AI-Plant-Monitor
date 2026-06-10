@@ -24,9 +24,9 @@ def main():
     brain = LunaBrain()
     voice = LunaVoice()
     memory = LunaMemory()
-    scorer    = HealthScorer()
+    scorer = HealthScorer()
     scheduler = Scheduler(memory)
-    healer    = SelfHealer()
+    healer = SelfHealer()
 
     # Generate (or load) today's care plan at startup
     if scheduler.today_plan is None:
