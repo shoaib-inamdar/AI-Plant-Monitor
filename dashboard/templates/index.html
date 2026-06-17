@@ -1,0 +1,573 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌱 Luna — Plant Care Dashboard</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #0d1117;
+    color: #e6edf3;
+    font-family: "Segoe UI", sans-serif;
+}
+
+.header {
+    text-align: center;
+    padding: 2rem;
+}
+
+.header h1 {
+    color: #3fb950;
+    font-size: 2.5rem;
+}
+
+.subtitle {
+    color: #8b949e;
+    margin-top: 0.5rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.card h2 {
+    margin-bottom: 1rem;
+    color: #3fb950;
+}
+
+.score-number {
+    font-size: 5rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+.score-excellent {
+    color: #3fb950;
+}
+
+.score-good {
+    color: #58a6ff;
+}
+
+.score-stressed {
+    color: #f0883e;
+}
+
+.score-critical {
+    color: #f85149;
+}
+
+.sensor-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid #21262d;
+}
+
+.task {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.task:hover {
+    color: #3fb950;
+}
+
+.task.done {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
+.quote {
+    font-style: italic;
+    color: #3fb950;
+    padding: 1rem;
+    border-left: 3px solid #3fb950;
+    background: rgba(63,185,80,0.05);
+}
+
+.refresh-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3fb950;
+    display: inline-block;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%,100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+#scoreChart {
+    width: 100%;
+    height: 180px;
+    background: #0d1117;
+    border-radius: 8px;
+}
+
+.incident {
+    border-left: 3px solid #f0883e;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    background: rgba(240,136,62,0.05);
+}
+
+small {
+    color: #8b949e;
+}
+
+footer {
+    text-align: center;
+    color: #8b949e;
+    padding: 1rem;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>🌱 Luna — AI Plant Care System</h1>
+    <p class="subtitle">
+        <span class="refresh-dot"></span>
+        Live Dashboard • Refreshes every 5 seconds
+    </p>
+</div>
+
+<div class="grid">
+
+    <!-- Health Score -->
+    <div class="card">
+        <h2>💚 Health Score</h2>
+
+        <div id="scoreNumber" class="score-number">—</div>
+
+        <div id="scoreStatus"
+             style="text-align:center;font-size:1.2rem;">
+        </div>
+
+        <div id="scoreTrend"
+             style="text-align:center;color:#8b949e;margin-top:10px;">
+        </div>
+    </div>
+
+    <!-- Sensor Readings -->
+    <div class="card">
+        <h2>📡 Sensor Readings</h2>
+
+        <div class="sensor-row">
+            <span>🌡️ Temperature</span>
+            <span id="sTemp">—</span>
+        </div>
+
+        <div class="sensor-row">
+            <span>💧 Humidity</span>
+            <span id="sHum">—</span>
+        </div>
+
+        <div class="sensor-row">
+            <span>🌬️ Air Quality</span>
+            <span id="sAqi">—</span>
+        </div>
+
+        <div class="sensor-row">
+            <span>🌧️ Rain</span>
+            <span id="sRain">—</span>
+        </div>
+
+        <div class="sensor-row">
+            <span>📊 Pressure</span>
+            <span id="sPres">—</span>
+        </div>
+
+        <div style="margin-top:10px;color:#8b949e;font-size:0.8rem;">
+            Last Update:
+            <span id="sTime">—</span>
+        </div>
+    </div>
+
+    <!-- Luna Says -->
+    <div class="card">
+        <h2>🌿 Luna Says</h2>
+
+        <div id="lunaMessage" class="quote">
+            Waiting for Luna's thoughts...
+        </div>
+
+        <div id="lunaActions"
+             style="margin-top:1rem;">
+        </div>
+    </div>
+
+    <!-- Care Plan -->
+    <div class="card">
+        <h2>📅 Today's Care Plan</h2>
+
+        <div id="planSummary"
+             style="color:#8b949e;margin-bottom:1rem;">
+        </div>
+
+        <div id="taskList"></div>
+    </div>
+
+    <!-- Health Trend -->
+    <div class="card">
+        <h2>📈 Health Trend</h2>
+
+        <canvas
+            id="scoreChart"
+            width="400"
+            height="180">
+        </canvas>
+    </div>
+
+    <!-- Incidents -->
+    <div class="card">
+        <h2>🔄 Healing Incidents</h2>
+
+        <div id="incidentList">
+            No incidents recorded.
+        </div>
+    </div>
+
+    <!-- Daily Stats -->
+    <div class="card">
+        <h2>📊 Today's Stats</h2>
+
+        <div id="todayStats">
+            No data yet today.
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    Luna AI Plant Care Dashboard
+</footer>
+
+<script>
+
+async function refresh() {
+
+    try {
+
+        const res = await fetch("/api/status");
+        const data = await res.json();
+
+        updateScore(data.last_ai_response);
+        updateSensors(data.latest_reading);
+        updateLunaQuote(data.last_ai_response);
+        updateCarePlan(data.care_plan);
+        updateIncidents(data.incidents);
+        updateStats(data.daily_summary,
+                    data.total_readings);
+
+        updateChart(data.recent_scores);
+
+    } catch (e) {
+
+        console.warn("Refresh failed:", e);
+
+    }
+}
+
+function updateScore(ai) {
+
+    if (!ai || !ai.health_score) return;
+
+    const score = ai.health_score;
+
+    const el = document.getElementById("scoreNumber");
+
+    el.textContent = score + "/100";
+
+    el.className =
+        "score-number " +
+        (
+            score >= 85 ? "score-excellent" :
+            score >= 70 ? "score-good" :
+            score >= 40 ? "score-stressed" :
+            "score-critical"
+        );
+
+    document.getElementById("scoreStatus").textContent =
+        (ai.status || "").toUpperCase();
+
+}
+
+function updateSensors(r) {
+
+    if (!r) return;
+
+    document.getElementById("sTemp").textContent =
+        (r.temperature ?? "--") + "°C";
+
+    document.getElementById("sHum").textContent =
+        (r.humidity ?? "--") + "%";
+
+    document.getElementById("sAqi").textContent =
+        (r.air_quality ?? "--") + " ppm";
+
+    document.getElementById("sRain").textContent =
+        r.rain === 1 ? "🌧️ Rain" : "☀️ Dry";
+
+    document.getElementById("sPres").textContent =
+        (r.pressure ?? "--") + " hPa";
+
+    document.getElementById("sTime").textContent =
+        r.timestamp || "—";
+
+}
+
+function updateLunaQuote(ai) {
+
+    if (!ai) return;
+
+    document.getElementById("lunaMessage").textContent =
+        '"' + (ai.message || "No message available") + '"';
+
+    const actions =
+        (ai.actions || [])
+        .map(a => `<div>• ${a}</div>`)
+        .join("");
+
+    document.getElementById("lunaActions").innerHTML =
+        actions;
+
+}
+
+function updateCarePlan(plan) {
+
+    if (!plan || !plan.tasks) {
+
+        document.getElementById("planSummary")
+            .textContent =
+            "No plan for today.";
+
+        document.getElementById("taskList")
+            .innerHTML = "";
+
+        return;
+    }
+
+    const done =
+        plan.tasks.filter(t => t.done).length;
+
+    const total =
+        plan.tasks.length;
+
+    document.getElementById("planSummary")
+        .textContent =
+        `${plan.summary || ""} (${done}/${total} done)`;
+
+    const html =
+        plan.tasks.map((t, i) => `
+            <div class="task ${t.done ? "done" : ""}"
+                 onclick="markDone(${i})">
+                <span>${t.done ? "✅" : "⬜"}</span>
+                <span>
+                    [${(t.priority || "").toUpperCase()}]
+                    ${t.action}
+                </span>
+            </div>
+        `).join("");
+
+    document.getElementById("taskList")
+        .innerHTML = html;
+}
+
+function updateIncidents(incidents) {
+
+    if (!incidents || incidents.length === 0) {
+
+        document.getElementById("incidentList")
+            .textContent =
+            "No incidents recorded.";
+
+        return;
+    }
+
+    const html =
+        incidents
+        .slice(-5)
+        .reverse()
+        .map(inc => `
+            <div class="incident">
+                <strong>${inc.trigger}</strong>
+                <br>
+
+                Score:
+                ${inc.score_at_start}/100
+
+                <br>
+
+                <small>
+                    Started:
+                    ${inc.started_at}
+                </small>
+
+                <br>
+
+                <small>
+                ${
+                    inc.resolved_at
+                    ? "✅ Resolved: " + inc.resolved_at
+                    : "⏳ Active"
+                }
+                </small>
+            </div>
+        `)
+        .join("");
+
+    document.getElementById("incidentList")
+        .innerHTML = html;
+}
+
+function updateStats(dailySummaries,
+                     totalReadings) {
+
+    const today =
+        new Date()
+        .toISOString()
+        .split("T")[0];
+
+    const summary =
+        (dailySummaries || {})[today];
+
+    if (!summary) {
+
+        document.getElementById("todayStats")
+            .textContent =
+            "No data yet today.";
+
+        return;
+    }
+
+    document.getElementById("todayStats")
+        .innerHTML = `
+        <div class="sensor-row">
+            <span>Avg Temperature</span>
+            <span>${summary.avg_temperature}°C</span>
+        </div>
+
+        <div class="sensor-row">
+            <span>Avg Humidity</span>
+            <span>${summary.avg_humidity}%</span>
+        </div>
+
+        <div class="sensor-row">
+            <span>Avg Air Quality</span>
+            <span>${summary.avg_air_quality} ppm</span>
+        </div>
+
+        <div class="sensor-row">
+            <span>Rain Events</span>
+            <span>${summary.rain_events}</span>
+        </div>
+
+        <div class="sensor-row">
+            <span>Total Readings</span>
+            <span>${totalReadings}</span>
+        </div>
+    `;
+}
+
+function updateChart(scores) {
+
+    const canvas =
+        document.getElementById("scoreChart");
+
+    if (!canvas ||
+        !scores ||
+        scores.length === 0) {
+        return;
+    }
+
+    const ctx =
+        canvas.getContext("2d");
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    ctx.beginPath();
+
+    scores.forEach((score, i) => {
+
+        const x =
+            (i / (scores.length - 1 || 1))
+            * canvas.width;
+
+        const y =
+            canvas.height -
+            (score / 100)
+            * canvas.height;
+
+        if (i === 0)
+            ctx.moveTo(x, y);
+        else
+            ctx.lineTo(x, y);
+    });
+
+    ctx.strokeStyle = "#3fb950";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+}
+
+async function markDone(index) {
+
+    await fetch(
+        "/api/mark_done/" + index,
+        {
+            method: "POST"
+        }
+    );
+
+    refresh();
+}
+
+refresh();
+
+setInterval(
+    refresh,
+    5000
+);
+
+</script>
+
+</body>
+</html>
+```
