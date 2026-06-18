@@ -1,26 +1,19 @@
-import sys
-import os
 import json
-import threading
+import os
+import sys
 
 # UTF-8 Fix
 sys.stdout.reconfigure(encoding="utf-8")
 
 from flask import Flask, jsonify, render_template
 
-sys.path.insert(
-    0,
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from python.memory import LunaMemory
-from python.config import (
-    MEMORY_FILE_PATH,
-    CARE_PLAN_FILE,
-    INCIDENTS_FILE
-)
+from python.config import CARE_PLAN_FILE, INCIDENTS_FILE, MEMORY_FILE_PATH
 
 app = Flask(__name__)
+
+
 def load_json(filepath):
     """
     Read a JSON file and return its contents.
@@ -30,7 +23,7 @@ def load_json(filepath):
         return {}
 
     try:
-        with open(filepath, "r", encoding="utf-8") as file:
+        with open(filepath, encoding="utf-8") as file:
             content = file.read().strip()
 
         if not content:
@@ -40,6 +33,7 @@ def load_json(filepath):
 
     except Exception:
         return {}
+
 
 @app.route("/")
 def index():
@@ -70,8 +64,7 @@ def api_status():
 
     # Recent Scores
     recent_scores = [
-        response.get("health_score", 50)
-        for response in ai_responses[-20:]
+        response.get("health_score", 50) for response in ai_responses[-20:]
     ]
 
     return jsonify(
@@ -81,10 +74,7 @@ def api_status():
             "recent_scores": recent_scores,
             "care_plan": care_plan_data,
             "incidents": incidents_data.get("incidents", []),
-            "daily_summary": memory_data.get(
-                "daily_summaries",
-                {}
-            ),
+            "daily_summary": memory_data.get("daily_summaries", {}),
             "total_readings": len(readings),
         }
     )
@@ -100,46 +90,25 @@ def mark_task_done(task_index):
         care_plan = load_json(CARE_PLAN_FILE)
 
         if not care_plan:
-            return jsonify(
-                {"error": "No care plan found"}
-            ), 404
+            return jsonify({"error": "No care plan found"}), 404
 
         tasks = care_plan.get("tasks", [])
 
         if task_index < 0 or task_index >= len(tasks):
-            return jsonify(
-                {"error": "Invalid task index"}
-            ), 400
+            return jsonify({"error": "Invalid task index"}), 400
 
         tasks[task_index]["done"] = True
 
-        with open(
-            CARE_PLAN_FILE,
-            "w",
-            encoding="utf-8"
-        ) as file:
-            json.dump(
-                care_plan,
-                file,
-                indent=4,
-                ensure_ascii=False
-            )
+        with open(CARE_PLAN_FILE, "w", encoding="utf-8") as file:
+            json.dump(care_plan, file, indent=4, ensure_ascii=False)
 
         return jsonify({"success": True})
 
     except Exception as error:
-        return jsonify(
-            {"error": str(error)}
-        ), 500
+        return jsonify({"error": str(error)}), 500
+
 
 if __name__ == "__main__":
-    print(
-        "🌱 Luna Dashboard starting at "
-        "http://localhost:5000"
-    )
+    print("🌱 Luna Dashboard starting at http://localhost:5000")
 
-    app.run(
-        debug=False,
-        port=5000,
-        threaded=True
-    )
+    app.run(debug=False, port=5000, threaded=True)
