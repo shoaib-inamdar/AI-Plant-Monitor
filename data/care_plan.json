@@ -1,58 +1,58 @@
 {
-  "date": "2026-05-19",
-  "summary": "Today's focus is on stabilizing the falling humidity trend and ensuring consistent moisture, while maintaining overall well-being.",
+  "date": "2026-06-17",
+  "summary": "Today's focus is to counteract the falling humidity trend and maintain overall environmental stability to ensure robust growth.",
   "tasks": [
     {
       "time": "morning",
-      "action": "Lightly mist all foliage with demineralized water for 30 seconds to gently raise ambient humidity around the leaves.",
+      "action": "Check soil moisture by inserting a finger 2-3 cm deep. If the soil feels dry, give 150ml of filtered, room-temperature water directly to the soil at the base.",
       "priority": "high",
       "done": false
     },
     {
       "time": "morning",
-      "action": "Gently insert a finger 2cm into the soil to assess moisture levels. If the top 2cm feels dry, prepare to water in the afternoon.",
-      "priority": "medium",
+      "action": "Lightly mist the top and undersides of all leaves using a fine-mist spray bottle filled with distilled water to increase immediate ambient humidity.",
+      "priority": "high",
       "done": false
     },
     {
       "time": "morning",
-      "action": "Observe overall leaf color and turgidity for any signs of stress or new growth emerging.",
+      "action": "Inspect all leaves and stems closely for any dust accumulation or early signs of pests, especially on the undersides.",
+      "priority": "medium",
+      "done": false
+    },
+    {
+      "time": "afternoon",
+      "action": "Prepare and place a pebble tray filled with water (water level below the pebbles) near my pot to create a localized humidity boost.",
+      "priority": "high",
+      "done": false
+    },
+    {
+      "time": "afternoon",
+      "action": "Gently rotate my pot by a quarter turn to ensure all sides receive balanced light exposure throughout the day.",
+      "priority": "medium",
+      "done": false
+    },
+    {
+      "time": "afternoon",
+      "action": "Observe the turgor of my leaves and the overall posture of my branches for any signs of wilting or stress.",
       "priority": "low",
       "done": false
     },
     {
-      "time": "afternoon",
-      "action": "Check the current room humidity. If still below 55% RH, mist foliage again for 20 seconds to provide further relief.",
-      "priority": "high",
-      "done": false
-    },
-    {
-      "time": "afternoon",
-      "action": "If soil was dry from the morning check, provide 200ml of filtered water directly to the soil base, ensuring even distribution.",
-      "priority": "medium",
-      "done": false
-    },
-    {
-      "time": "afternoon",
-      "action": "Carefully rotate the pot 45 degrees clockwise to ensure all sides receive balanced light exposure.",
-      "priority": "medium",
-      "done": false
-    },
-    {
       "time": "evening",
-      "action": "Ensure no water droplets remain on leaves by gently dabbing with a soft cloth if necessary to prevent fungal development overnight.",
+      "action": "Confirm that no direct cold drafts are reaching my leaves and that the ambient temperature remains stable around 25\u00b0C.",
       "priority": "high",
       "done": false
     },
     {
       "time": "evening",
-      "action": "Verify air circulation around the pot is unobstructed and consistent. Adjust any nearby items if airflow is restricted.",
+      "action": "Gently wipe any visible dust from broad leaf surfaces with a soft, slightly damp cloth to improve light absorption and respiration.",
       "priority": "medium",
       "done": false
     },
     {
       "time": "evening",
-      "action": "Reflect on today's light exposure and temperature consistency, noting any significant changes for future adjustments.",
+      "action": "Dim the surrounding lights to signal the start of my resting period and support my nocturnal energy processes.",
       "priority": "low",
       "done": false
     }
