@@ -8,7 +8,6 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 from flask import Flask, jsonify, render_template
 
-# Add project root to Python path
 sys.path.insert(
     0,
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,13 +20,7 @@ from python.config import (
     INCIDENTS_FILE
 )
 
-# Create Flask App
 app = Flask(__name__)
-
-
-# -----------------------------
-# Helper: Load JSON Safely
-# -----------------------------
 def load_json(filepath):
     """
     Read a JSON file and return its contents.
@@ -48,10 +41,6 @@ def load_json(filepath):
     except Exception:
         return {}
 
-
-# -----------------------------
-# Routes
-# -----------------------------
 @app.route("/")
 def index():
     """
@@ -143,10 +132,6 @@ def mark_task_done(task_index):
             {"error": str(error)}
         ), 500
 
-
-# -----------------------------
-# Main
-# -----------------------------
 if __name__ == "__main__":
     print(
         "🌱 Luna Dashboard starting at "
