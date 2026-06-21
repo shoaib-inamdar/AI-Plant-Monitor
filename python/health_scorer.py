@@ -8,19 +8,49 @@ from datetime import datetime
 
 try:
     from python.config import (
-        IDEAL_TEMP_MIN, IDEAL_TEMP_MAX, IDEAL_HUM_MIN, IDEAL_HUM_MAX,
-        IDEAL_AQI_MAX, IDEAL_SOIL_MIN, IDEAL_SOIL_MAX,
-        WEIGHT_TEMP, WEIGHT_HUM, WEIGHT_AQI, WEIGHT_RAIN, WEIGHT_PRES, WEIGHT_SOIL,
-        ALERT_TEMP_HIGH, ALERT_TEMP_LOW, ALERT_HUM_LOW, ALERT_AQI_HIGH,
-        ALERT_SOIL_DRY, ALERT_SOIL_WET, MAX_SCORE_HISTORY
+        ALERT_AQI_HIGH,
+        ALERT_HUM_LOW,
+        ALERT_SOIL_DRY,
+        ALERT_SOIL_WET,
+        ALERT_TEMP_HIGH,
+        ALERT_TEMP_LOW,
+        IDEAL_AQI_MAX,
+        IDEAL_HUM_MAX,
+        IDEAL_HUM_MIN,
+        IDEAL_SOIL_MAX,
+        IDEAL_SOIL_MIN,
+        IDEAL_TEMP_MAX,
+        IDEAL_TEMP_MIN,
+        MAX_SCORE_HISTORY,
+        WEIGHT_AQI,
+        WEIGHT_HUM,
+        WEIGHT_PRES,
+        WEIGHT_RAIN,
+        WEIGHT_SOIL,
+        WEIGHT_TEMP,
     )
 except ImportError:
     from config import (
-        IDEAL_TEMP_MIN, IDEAL_TEMP_MAX, IDEAL_HUM_MIN, IDEAL_HUM_MAX,
-        IDEAL_AQI_MAX, IDEAL_SOIL_MIN, IDEAL_SOIL_MAX,
-        WEIGHT_TEMP, WEIGHT_HUM, WEIGHT_AQI, WEIGHT_RAIN, WEIGHT_PRES, WEIGHT_SOIL,
-        ALERT_TEMP_HIGH, ALERT_TEMP_LOW, ALERT_HUM_LOW, ALERT_AQI_HIGH,
-        ALERT_SOIL_DRY, ALERT_SOIL_WET, MAX_SCORE_HISTORY
+        ALERT_AQI_HIGH,
+        ALERT_HUM_LOW,
+        ALERT_SOIL_DRY,
+        ALERT_SOIL_WET,
+        ALERT_TEMP_HIGH,
+        ALERT_TEMP_LOW,
+        IDEAL_AQI_MAX,
+        IDEAL_HUM_MAX,
+        IDEAL_HUM_MIN,
+        IDEAL_SOIL_MAX,
+        IDEAL_SOIL_MIN,
+        IDEAL_TEMP_MAX,
+        IDEAL_TEMP_MIN,
+        MAX_SCORE_HISTORY,
+        WEIGHT_AQI,
+        WEIGHT_HUM,
+        WEIGHT_PRES,
+        WEIGHT_RAIN,
+        WEIGHT_SOIL,
+        WEIGHT_TEMP,
     )
 
 
@@ -76,13 +106,21 @@ class HealthScorer:
         """Detect urgent alert conditions regardless of score."""
         alerts = []
         if reading["temperature"] > ALERT_TEMP_HIGH:
-            alerts.append(f"🚨 CRITICAL: Temperature {reading['temperature']}°C — heat emergency!")
+            alerts.append(
+                f"🚨 CRITICAL: Temperature {reading['temperature']}°C — heat emergency!"
+            )
         if reading["temperature"] < ALERT_TEMP_LOW:
-            alerts.append(f"🚨 CRITICAL: Temperature {reading['temperature']}°C — dangerously cold!")
+            alerts.append(
+                f"🚨 CRITICAL: Temperature {reading['temperature']}°C — dangerously cold!"
+            )
         if reading["humidity"] < ALERT_HUM_LOW:
-            alerts.append(f"🚨 CRITICAL: Humidity {reading['humidity']}% — drought conditions!")
+            alerts.append(
+                f"🚨 CRITICAL: Humidity {reading['humidity']}% — drought conditions!"
+            )
         if reading["air_quality"] > ALERT_AQI_HIGH:
-            alerts.append(f"🚨 WARNING: Air quality {reading['air_quality']} ppm — poor ventilation!")
+            alerts.append(
+                f"🚨 WARNING: Air quality {reading['air_quality']} ppm — poor ventilation!"
+            )
         soil = reading.get("soil_moisture", 55)
         if soil < ALERT_SOIL_DRY:
             alerts.append(f"🚨 CRITICAL: Soil {soil}% — plant is drought-stressed!")
@@ -95,39 +133,46 @@ class HealthScorer:
         if reading is None:
             return None
 
-        soil = reading.get("soil_moisture", 55)   # default to healthy if missing
+        soil = reading.get("soil_moisture", 55)  # default to healthy if missing
 
-        temp_score  = self._score_temperature(reading["temperature"])
-        hum_score   = self._score_humidity(reading["humidity"])
-        aqi_score   = self._score_air_quality(reading["air_quality"])
-        rain_score  = self._score_rain(reading["rain"])
-        pres_score  = self._score_pressure(reading["pressure"])
-        soil_score  = self._score_soil_moisture(soil)
+        temp_score = self._score_temperature(reading["temperature"])
+        hum_score = self._score_humidity(reading["humidity"])
+        aqi_score = self._score_air_quality(reading["air_quality"])
+        rain_score = self._score_rain(reading["rain"])
+        pres_score = self._score_pressure(reading["pressure"])
+        soil_score = self._score_soil_moisture(soil)
 
-        total = round(temp_score + hum_score + aqi_score + rain_score + pres_score + soil_score)
+        total = round(
+            temp_score + hum_score + aqi_score + rain_score + pres_score + soil_score
+        )
         total = max(0, min(100, total))
 
-        if total >= 85:   status = "excellent"
-        elif total >= 70: status = "good"
-        elif total >= 50: status = "mild_stress"
-        elif total >= 30: status = "stressed"
-        else:             status = "critical"
+        if total >= 85:
+            status = "excellent"
+        elif total >= 70:
+            status = "good"
+        elif total >= 50:
+            status = "mild_stress"
+        elif total >= 30:
+            status = "stressed"
+        else:
+            status = "critical"
 
         alerts = self._check_alerts(reading)
 
         result = {
             "timestamp": reading["timestamp"],
-            "score":     total,
-            "status":    status,
-            "alerts":    alerts,
+            "score": total,
+            "status": status,
+            "alerts": alerts,
             "breakdown": {
-                "temperature":  round(temp_score, 1),
-                "humidity":     round(hum_score, 1),
-                "air_quality":  round(aqi_score, 1),
-                "rain":         round(rain_score, 1),
-                "pressure":     round(pres_score, 1),
+                "temperature": round(temp_score, 1),
+                "humidity": round(hum_score, 1),
+                "air_quality": round(aqi_score, 1),
+                "rain": round(rain_score, 1),
+                "pressure": round(pres_score, 1),
                 "soil_moisture": round(soil_score, 1),
-            }
+            },
         }
         self.score_history.append(result)
         return result

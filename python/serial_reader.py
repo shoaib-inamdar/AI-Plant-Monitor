@@ -12,29 +12,59 @@ sensors are active, so all downstream modules (scorer, memory, AI) are
 unaffected by missing hardware.
 """
 
-import time
 from datetime import datetime
 
 try:
     from python.config import (
-        AQI_MAX, AQI_MIN, BAUD_RATE, HUM_MAX, HUM_MIN,
-        PRES_MAX, PRES_MIN, READ_INTERVAL_SECONDS, SERIAL_PORT,
-        SOIL_MAX, SOIL_MIN, TEMP_MAX, TEMP_MIN,
+        AQI_MAX,
+        AQI_MIN,
+        BAUD_RATE,
+        DEFAULT_AIR_QUALITY,
+        DEFAULT_PRESSURE,
+        DEFAULT_RAIN,
+        DEFAULT_SOIL_MOISTURE,
+        HUM_MAX,
+        HUM_MIN,
+        HW_BMP280_AVAILABLE,
+        HW_DHT22_AVAILABLE,
+        HW_MQ135_AVAILABLE,
+        HW_RAIN_AVAILABLE,
+        HW_SOIL_AVAILABLE,
+        PRES_MAX,
+        PRES_MIN,
+        READ_INTERVAL_SECONDS,
+        SERIAL_PORT,
+        SOIL_MAX,
+        SOIL_MIN,
+        TEMP_MAX,
+        TEMP_MIN,
         USE_REAL_HARDWARE,
-        HW_DHT22_AVAILABLE, HW_MQ135_AVAILABLE, HW_RAIN_AVAILABLE,
-        HW_BMP280_AVAILABLE, HW_SOIL_AVAILABLE,
-        DEFAULT_AIR_QUALITY, DEFAULT_RAIN, DEFAULT_PRESSURE, DEFAULT_SOIL_MOISTURE,
     )
     from python.sensor_simulator import SimulatedSerial
 except ImportError:
     from config import (
-        AQI_MAX, AQI_MIN, BAUD_RATE, HUM_MAX, HUM_MIN,
-        PRES_MAX, PRES_MIN, READ_INTERVAL_SECONDS, SERIAL_PORT,
-        SOIL_MAX, SOIL_MIN, TEMP_MAX, TEMP_MIN,
+        AQI_MAX,
+        AQI_MIN,
+        BAUD_RATE,
+        DEFAULT_AIR_QUALITY,
+        DEFAULT_PRESSURE,
+        DEFAULT_RAIN,
+        DEFAULT_SOIL_MOISTURE,
+        HUM_MAX,
+        HUM_MIN,
+        HW_BMP280_AVAILABLE,
+        HW_DHT22_AVAILABLE,
+        HW_MQ135_AVAILABLE,
+        HW_RAIN_AVAILABLE,
+        HW_SOIL_AVAILABLE,
+        PRES_MAX,
+        PRES_MIN,
+        SERIAL_PORT,
+        SOIL_MAX,
+        SOIL_MIN,
+        TEMP_MAX,
+        TEMP_MIN,
         USE_REAL_HARDWARE,
-        HW_DHT22_AVAILABLE, HW_MQ135_AVAILABLE, HW_RAIN_AVAILABLE,
-        HW_BMP280_AVAILABLE, HW_SOIL_AVAILABLE,
-        DEFAULT_AIR_QUALITY, DEFAULT_RAIN, DEFAULT_PRESSURE, DEFAULT_SOIL_MOISTURE,
     )
     from sensor_simulator import SimulatedSerial
 
@@ -61,19 +91,20 @@ class SerialReader:
 
         if use_sim:
             self.serial = SimulatedSerial()
-            self.mode   = "simulator"
+            self.mode = "simulator"
             print("📡 Mode: Sensor Simulator")
         else:
             try:
                 import serial
+
                 self.serial = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
-                self.mode   = "hardware"
+                self.mode = "hardware"
                 print(f"📡 Mode: Real Arduino on {SERIAL_PORT}")
             except (SerialException, Exception) as e:
                 print(f"❌ Could not open {SERIAL_PORT}: {e}")
                 print("   Falling back to simulator.")
                 self.serial = SimulatedSerial()
-                self.mode   = "simulator_fallback"
+                self.mode = "simulator_fallback"
 
         self.last_reading = None
 
@@ -82,11 +113,11 @@ class SerialReader:
         if USE_REAL_HARDWARE:
             print("\n🔌 Hardware Mode: REAL ARDUINO")
             sensors = [
-                ("DHT22 (Temp+Hum)", HW_DHT22_AVAILABLE,  "Pin 2"),
-                ("MQ-135 (Air)",     HW_MQ135_AVAILABLE,  "Pin A0"),
-                ("Rain Sensor",      HW_RAIN_AVAILABLE,   "Pin 4"),
-                ("BMP280 (Pressure)",HW_BMP280_AVAILABLE, "I2C"),
-                ("Soil Moisture",    HW_SOIL_AVAILABLE,   "Pin A1"),
+                ("DHT22 (Temp+Hum)", HW_DHT22_AVAILABLE, "Pin 2"),
+                ("MQ-135 (Air)", HW_MQ135_AVAILABLE, "Pin A0"),
+                ("Rain Sensor", HW_RAIN_AVAILABLE, "Pin 4"),
+                ("BMP280 (Pressure)", HW_BMP280_AVAILABLE, "I2C"),
+                ("Soil Moisture", HW_SOIL_AVAILABLE, "Pin A1"),
             ]
             for name, avail, pin in sensors:
                 status = "✅ ACTIVE" if avail else "⬜ OFF (default value used)"
@@ -128,12 +159,12 @@ class SerialReader:
             # ── Temperature + Humidity (DHT22) ────────────────────────────
             if HW_DHT22_AVAILABLE or self.mode.startswith("sim"):
                 temperature = float(data["TEMP"])
-                humidity    = float(data["HUM"])
+                humidity = float(data["HUM"])
             else:
                 # Sensor off — but we still need some value; use last known or 25°C
                 prev = self.last_reading or {}
                 temperature = prev.get("temperature", 25.0)
-                humidity    = prev.get("humidity",    60.0)
+                humidity = prev.get("humidity", 60.0)
 
             # ── Air Quality (MQ-135) ──────────────────────────────────────
             if HW_MQ135_AVAILABLE or self.mode.startswith("sim"):
@@ -160,12 +191,12 @@ class SerialReader:
                 soil_moisture = DEFAULT_SOIL_MOISTURE
 
             return {
-                "timestamp":    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "temperature":  temperature,
-                "humidity":     humidity,
-                "air_quality":  air_quality,
-                "rain":         rain,
-                "pressure":     pressure,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "temperature": temperature,
+                "humidity": humidity,
+                "air_quality": air_quality,
+                "rain": rain,
+                "pressure": pressure,
                 "soil_moisture": soil_moisture,
             }
 
@@ -180,11 +211,11 @@ class SerialReader:
 
         status = "ok"
         checks = [
-            ("temperature",  reading["temperature"],  TEMP_MIN,  TEMP_MAX),
-            ("humidity",     reading["humidity"],      HUM_MIN,   HUM_MAX),
-            ("air_quality",  reading["air_quality"],   AQI_MIN,   AQI_MAX),
-            ("pressure",     reading["pressure"],      PRES_MIN,  PRES_MAX),
-            ("soil_moisture",reading["soil_moisture"], SOIL_MIN,  SOIL_MAX),
+            ("temperature", reading["temperature"], TEMP_MIN, TEMP_MAX),
+            ("humidity", reading["humidity"], HUM_MIN, HUM_MAX),
+            ("air_quality", reading["air_quality"], AQI_MIN, AQI_MAX),
+            ("pressure", reading["pressure"], PRES_MIN, PRES_MAX),
+            ("soil_moisture", reading["soil_moisture"], SOIL_MIN, SOIL_MAX),
         ]
         for field, value, lo, hi in checks:
             if not (lo <= value <= hi):
@@ -199,10 +230,10 @@ class SerialReader:
         return reading
 
     def get_reading(self):
-        raw      = self.read_raw_line()
+        raw = self.read_raw_line()
         if raw is None:
             return None
-        parsed   = self.parse_line(raw)
+        parsed = self.parse_line(raw)
         if parsed is None:
             return None
         validated = self.validate_reading(parsed)

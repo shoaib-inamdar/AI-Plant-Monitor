@@ -1,7 +1,7 @@
-import sys
-import os
 import json
+import os
 import subprocess
+import sys
 import threading
 import time
 
@@ -14,6 +14,7 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
 # Fallback: Piper TTS — offline neural voice (needs piper.exe + DLLs + PyAudio)
 try:
     import pyttsx3
+
     PYTTSX3_AVAILABLE = True
 except ImportError:
     pyttsx3 = None
@@ -21,6 +22,7 @@ except ImportError:
 
 try:
     import pyaudio
+
     PYAUDIO_AVAILABLE = True
 except ImportError:
     pyaudio = None
@@ -29,15 +31,29 @@ except ImportError:
 # ── CONFIG IMPORT ─────────────────────────────────────────────────────────────
 try:
     from python.config import (
-        AUDIO_CHUNK_SIZE, AUDIO_SAMPLE_RATE, LISTEN_TIMEOUT_SECONDS,
-        PIPER_EXE_PATH, PIPER_VOICE_MODEL, VOSK_MODEL_PATH,
-        VOICE_ENABLED, TTS_BACKEND, TTS_RATE, TTS_VOLUME,
+        AUDIO_CHUNK_SIZE,
+        AUDIO_SAMPLE_RATE,
+        LISTEN_TIMEOUT_SECONDS,
+        PIPER_EXE_PATH,
+        PIPER_VOICE_MODEL,
+        TTS_BACKEND,
+        TTS_RATE,
+        TTS_VOLUME,
+        VOICE_ENABLED,
+        VOSK_MODEL_PATH,
     )
 except ImportError:
     from config import (
-        AUDIO_CHUNK_SIZE, AUDIO_SAMPLE_RATE, LISTEN_TIMEOUT_SECONDS,
-        PIPER_EXE_PATH, PIPER_VOICE_MODEL, VOSK_MODEL_PATH,
-        VOICE_ENABLED, TTS_BACKEND, TTS_RATE, TTS_VOLUME,
+        AUDIO_CHUNK_SIZE,
+        AUDIO_SAMPLE_RATE,
+        LISTEN_TIMEOUT_SECONDS,
+        PIPER_EXE_PATH,
+        PIPER_VOICE_MODEL,
+        TTS_BACKEND,
+        TTS_RATE,
+        TTS_VOLUME,
+        VOICE_ENABLED,
+        VOSK_MODEL_PATH,
     )
 
 
@@ -51,7 +67,7 @@ class Pyttsx3TTS:
 
     def __init__(self):
         self.available = False
-        self._engine   = None  # lazy-init: create engine per call (thread-safe)
+        self._engine = None  # lazy-init: create engine per call (thread-safe)
 
         if not PYTTSX3_AVAILABLE:
             print("⚠️  pyttsx3 not installed — run: uv add pyttsx3")
@@ -63,7 +79,7 @@ class Pyttsx3TTS:
         # Quick smoke test
         try:
             engine = pyttsx3.init()
-            engine.setProperty("rate",   TTS_RATE)
+            engine.setProperty("rate", TTS_RATE)
             engine.setProperty("volume", TTS_VOLUME)
             # Try to pick a female voice (sounds better for Luna)
             voices = engine.getProperty("voices")
@@ -86,7 +102,7 @@ class Pyttsx3TTS:
         # Each call creates a fresh engine — avoids thread-state issues
         try:
             engine = pyttsx3.init()
-            engine.setProperty("rate",   TTS_RATE)
+            engine.setProperty("rate", TTS_RATE)
             engine.setProperty("volume", TTS_VOLUME)
             voices = engine.getProperty("voices")
             for v in voices:
@@ -134,14 +150,18 @@ class PiperTTS:
         try:
             result = subprocess.run(
                 [PIPER_EXE_PATH, "--model", PIPER_VOICE_MODEL, "--output-raw"],
-                input=text.encode("utf-8"), capture_output=True, timeout=30,
+                input=text.encode("utf-8"),
+                capture_output=True,
+                timeout=30,
             )
             audio_bytes = result.stdout
             if not audio_bytes:
                 print("⚠️  Piper produced no audio — check DLLs in piper/ folder")
                 return
-            pa     = pyaudio.PyAudio()
-            stream = pa.open(format=pyaudio.paInt16, channels=1, rate=22050, output=True)
+            pa = pyaudio.PyAudio()
+            stream = pa.open(
+                format=pyaudio.paInt16, channels=1, rate=22050, output=True
+            )
             stream.write(audio_bytes)
             stream.stop_stream()
             stream.close()
@@ -173,13 +193,15 @@ class VoskSTT:
             return
 
         try:
-            import vosk
             import logging
+
+            import vosk
+
             # Suppress Vosk's verbose kaldi logs
             logging.getLogger("vosk").setLevel(logging.WARNING)
-            self.model      = vosk.Model(VOSK_MODEL_PATH)
+            self.model = vosk.Model(VOSK_MODEL_PATH)
             self.recognizer = vosk.KaldiRecognizer(self.model, AUDIO_SAMPLE_RATE)
-            self.available  = True
+            self.available = True
             print("🎙️  Vosk STT ready")
         except Exception as e:
             print(f"⚠️  Vosk setup failed: {e}")
@@ -193,17 +215,19 @@ class VoskSTT:
         stream = None
         try:
             stream = pa.open(
-                format=pyaudio.paInt16, channels=1,
-                rate=AUDIO_SAMPLE_RATE, input=True,
+                format=pyaudio.paInt16,
+                channels=1,
+                rate=AUDIO_SAMPLE_RATE,
+                input=True,
                 frames_per_buffer=AUDIO_CHUNK_SIZE,
             )
             print("🎙️  Listening...")
-            start     = time.time()
+            start = time.time()
             final_txt = ""
             while (time.time() - start) < LISTEN_TIMEOUT_SECONDS:
                 chunk = stream.read(AUDIO_CHUNK_SIZE, exception_on_overflow=False)
                 if self.recognizer.AcceptWaveform(chunk):
-                    res  = json.loads(self.recognizer.Result())
+                    res = json.loads(self.recognizer.Result())
                     text = res.get("text", "").strip()
                     if text:
                         final_txt = text
@@ -234,7 +258,7 @@ class LunaVoice:
     def __init__(self):
         # Determine which TTS to use based on config + availability
         self._tts = self._init_tts()
-        self.stt  = VoskSTT()
+        self.stt = VoskSTT()
         print("🌿 Luna Voice Agent ready")
 
     def _init_tts(self):
@@ -285,8 +309,8 @@ class LunaVoice:
         if not response_dict:
             return
         message = response_dict.get("message", "")
-        reason  = response_dict.get("reason",  "")
-        text    = f"{message}. {reason}" if (message and reason) else (message or reason)
+        reason = response_dict.get("reason", "")
+        text = f"{message}. {reason}" if (message and reason) else (message or reason)
         if not text:
             text = "I am monitoring my environment carefully."
         self.speak(text)
@@ -298,7 +322,9 @@ if __name__ == "__main__":
     voice = LunaVoice()
 
     print("\n--- TTS Test ---")
-    voice.speak_sync("Hello! I am Luna, your plant friend. I am feeling wonderful today!")
+    voice.speak_sync(
+        "Hello! I am Luna, your plant friend. I am feeling wonderful today!"
+    )
     print("TTS test complete.\n")
 
     ans = input("Test speech recognition? (y/n): ").strip().lower()

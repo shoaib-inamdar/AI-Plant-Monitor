@@ -14,16 +14,21 @@ _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _PROJECT_ROOT)
 
 from python.config import (
-    CARE_PLAN_FILE, INCIDENTS_FILE, MEMORY_FILE_PATH, USE_REAL_HARDWARE
+    CARE_PLAN_FILE,
+    INCIDENTS_FILE,
+    MEMORY_FILE_PATH,
+    USE_REAL_HARDWARE,
 )
+
 
 # Resolve relative config paths to absolute
 def _abs(p):
     return os.path.join(_PROJECT_ROOT, p)
 
+
 MEMORY_FILE = _abs(MEMORY_FILE_PATH)
-CARE_PLAN   = _abs(CARE_PLAN_FILE)
-INCIDENTS   = _abs(INCIDENTS_FILE)
+CARE_PLAN = _abs(CARE_PLAN_FILE)
+INCIDENTS = _abs(INCIDENTS_FILE)
 
 app = Flask(__name__)
 
@@ -49,29 +54,31 @@ def index():
 
 @app.route("/api/status")
 def api_status():
-    memory_data    = load_json(MEMORY_FILE)
+    memory_data = load_json(MEMORY_FILE)
     care_plan_data = load_json(CARE_PLAN)
     incidents_data = load_json(INCIDENTS)
 
-    readings     = memory_data.get("readings",     [])
+    readings = memory_data.get("readings", [])
     ai_responses = memory_data.get("ai_responses", [])
 
-    latest  = readings[-1]     if readings     else {}
+    latest = readings[-1] if readings else {}
     last_ai = ai_responses[-1] if ai_responses else {}
 
     # Last 40 AI scores for the chart
     recent_scores = [r.get("health_score", 50) for r in ai_responses[-40:]]
 
-    return jsonify({
-        "latest_reading":  latest,
-        "last_ai_response": last_ai,
-        "recent_scores":   recent_scores,
-        "care_plan":       care_plan_data,
-        "incidents":       incidents_data.get("incidents", []),
-        "daily_summary":   memory_data.get("daily_summaries", {}),
-        "total_readings":  len(readings),
-        "mode":            "hardware" if USE_REAL_HARDWARE else "simulator",
-    })
+    return jsonify(
+        {
+            "latest_reading": latest,
+            "last_ai_response": last_ai,
+            "recent_scores": recent_scores,
+            "care_plan": care_plan_data,
+            "incidents": incidents_data.get("incidents", []),
+            "daily_summary": memory_data.get("daily_summaries", {}),
+            "total_readings": len(readings),
+            "mode": "hardware" if USE_REAL_HARDWARE else "simulator",
+        }
+    )
 
 
 @app.route("/api/mark_done/<int:task_index>", methods=["POST"])
@@ -98,7 +105,9 @@ def mark_task_done(task_index):
 @app.route("/api/health")
 def api_health():
     """Simple health check endpoint."""
-    return jsonify({"status": "ok", "mode": "hardware" if USE_REAL_HARDWARE else "simulator"})
+    return jsonify(
+        {"status": "ok", "mode": "hardware" if USE_REAL_HARDWARE else "simulator"}
+    )
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────

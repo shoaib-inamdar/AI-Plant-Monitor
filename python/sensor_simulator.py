@@ -30,7 +30,7 @@ except ImportError:
 
 # ── SOIL MOISTURE STATE ───────────────────────────────────────────────────────
 # Soil moisture is stateful — it dries out slowly across time
-_soil_moisture = DEFAULT_SOIL_MOISTURE   # start at healthy level
+_soil_moisture = DEFAULT_SOIL_MOISTURE  # start at healthy level
 _last_soil_update = time.time()
 
 # ── PRESSURE DRIFT ────────────────────────────────────────────────────────────
@@ -76,13 +76,13 @@ def generate_sensor_reading():
     """
     global _soil_moisture
 
-    now  = datetime.now()
-    hour = now.hour + now.minute / 60.0   # fractional hour
+    now = datetime.now()
+    hour = now.hour + now.minute / 60.0  # fractional hour
 
     # ── Temperature: sinusoidal diurnal pattern ────────────────────────────
     # Peak ~14:00, trough ~04:00. Range 18–32°C (typical indoor plant env.)
     base_temp = 25.0
-    amplitude = 5.0   # ±5°C swing
+    amplitude = 5.0  # ±5°C swing
     # phase shift: max at hour=14 → sin peaks at π/2 → offset by 14h
     phase = (hour - 14) / 24 * 2 * math.pi
     temperature = base_temp + amplitude * math.sin(phase) + random.uniform(-0.5, 0.5)
@@ -90,7 +90,7 @@ def generate_sensor_reading():
 
     # ── Humidity: inversely correlated with temperature ────────────────────
     base_humidity = 62.0
-    hum_swing = -(temperature - base_temp) * 1.2   # warmer → drier
+    hum_swing = -(temperature - base_temp) * 1.2  # warmer → drier
     humidity = base_humidity + hum_swing + random.uniform(-3, 3)
     humidity = round(max(20.0, min(95.0, humidity)), 1)
 
@@ -116,12 +116,12 @@ def generate_sensor_reading():
     timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
 
     return {
-        "timestamp":    timestamp,
-        "temperature":  temperature,
-        "humidity":     humidity,
-        "air_quality":  aqi,
-        "rain":         rain,
-        "pressure":     pressure,
+        "timestamp": timestamp,
+        "temperature": temperature,
+        "humidity": humidity,
+        "air_quality": aqi,
+        "rain": rain,
+        "pressure": pressure,
         "soil_moisture": soil,
     }
 
@@ -146,8 +146,15 @@ def save_to_csv(reading):
     folder = os.path.dirname(CSV_LOG_PATH)
     os.makedirs(folder, exist_ok=True)
 
-    fieldnames = ["timestamp", "temperature", "humidity",
-                  "air_quality", "rain", "pressure", "soil_moisture"]
+    fieldnames = [
+        "timestamp",
+        "temperature",
+        "humidity",
+        "air_quality",
+        "rain",
+        "pressure",
+        "soil_moisture",
+    ]
 
     file_exists = os.path.isfile(CSV_LOG_PATH)
     with open(CSV_LOG_PATH, "a", newline="", encoding="utf-8") as f:
@@ -166,19 +173,19 @@ class SimulatedSerial:
     """
 
     def __init__(self, port="SIMULATED", baudrate=9600):
-        self.port     = port
+        self.port = port
         self.baudrate = baudrate
-        self.is_open  = True
+        self.is_open = True
         print(f"🌱 Simulated serial port active on '{self.port}'")
         print("   Producing realistic diurnal sensor data with soil moisture")
 
     def readline(self):
         if not self.is_open:
             return b""
-        reading      = generate_sensor_reading()
+        reading = generate_sensor_reading()
         save_to_csv(reading)
-        serial_str   = reading_to_serial_string(reading) + "\n"
-        time.sleep(2)   # mimic hardware 2-second cycle
+        serial_str = reading_to_serial_string(reading) + "\n"
+        time.sleep(2)  # mimic hardware 2-second cycle
         return serial_str.encode("utf-8")
 
     def close(self):
@@ -192,14 +199,14 @@ if __name__ == "__main__":
     print("\nStreaming simulator output — press Ctrl+C to stop\n")
     try:
         for i in range(10):
-            raw   = s.readline().decode("utf-8").strip()
+            raw = s.readline().decode("utf-8").strip()
             parts = dict(p.split(":") for p in raw.split(","))
             print(
-                f"[{i+1:02d}] Temp={parts['TEMP']}°C  "
+                f"[{i + 1:02d}] Temp={parts['TEMP']}°C  "
                 f"Hum={parts['HUM']}%  "
                 f"AQI={parts['AIR']}ppm  "
                 f"Soil={parts['SOIL']}%  "
-                f"Rain={'🌧' if parts['RAIN']=='1' else '☀'}  "
+                f"Rain={'🌧' if parts['RAIN'] == '1' else '☀'}  "
                 f"Pres={parts['PRES']}hPa"
             )
     except KeyboardInterrupt:
