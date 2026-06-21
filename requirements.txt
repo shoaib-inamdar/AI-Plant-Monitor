@@ -5,5 +5,5 @@ vosk              # Speech-to-text (listens to you)
 schedule          # Runs tasks on a timer
 pandas            # Handles sensor data in tables
 requests   
-pyaudio
 Flask
+pyttsx3

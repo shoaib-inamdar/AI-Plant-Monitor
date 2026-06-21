@@ -1,7 +1,7 @@
 [project]
 name = "ai-plant-monitor"
 version = "0.1.0"
-description = "Add your description here"
+description = "Luna AI Plant Care System"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -12,6 +12,7 @@ dependencies = [
     "pipwin>=0.5.2",
     "pyserial>=3.5",
     "python-dotenv>=1.2.2",
+    "pyttsx3>=2.99",
     "requests>=2.33.1",
     "schedule>=1.2.2",
     "vosk>=0.3.45",

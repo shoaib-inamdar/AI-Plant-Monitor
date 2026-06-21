@@ -1,572 +1,591 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🌱 Luna — Plant Care Dashboard</title>
-
+<title>🌱 Luna — AI Plant Care Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* ── CSS Variables ───────────────────────────────────────────────────── */
+:root {
+  --bg:        #0a0d12;
+  --surface:   #111418;
+  --surface2:  #181c24;
+  --border:    #21262d;
+  --green:     #3fb950;
+  --green-dim: #1a3b22;
+  --blue:      #58a6ff;
+  --orange:    #f0883e;
+  --red:       #f85149;
+  --yellow:    #d29922;
+  --text:      #e6edf3;
+  --muted:     #8b949e;
+  --radius:    14px;
+  --shadow:    0 4px 24px rgba(0,0,0,0.4);
 }
+
+/* ── Reset ───────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-    background: #0d1117;
-    color: #e6edf3;
-    font-family: "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  min-height: 100vh;
 }
 
+/* ── Header ──────────────────────────────────────────────────────────── */
 .header {
-    text-align: center;
-    padding: 2rem;
+  background: linear-gradient(135deg, #0a1f14 0%, #0d1117 60%, #12101a 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
-
-.header h1 {
-    color: #3fb950;
-    font-size: 2.5rem;
+.header-left { display: flex; align-items: center; gap: 1rem; }
+.logo { font-size: 2rem; filter: drop-shadow(0 0 8px rgba(63,185,80,0.5)); }
+.header h1 { font-size: 1.6rem; font-weight: 700; color: var(--green); letter-spacing: -0.5px; }
+.header .subtitle { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+.live-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--green-dim); border: 1px solid var(--green);
+  color: var(--green); padding: 4px 12px; border-radius: 20px;
+  font-size: 0.75rem; font-weight: 500;
 }
-
-.subtitle {
-    color: #8b949e;
-    margin-top: 0.5rem;
+.pulse-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green); animation: pulse 2s infinite;
 }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
 
+/* ── Grid layout ─────────────────────────────────────────────────────── */
 .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 1.5rem;
-    padding: 1.5rem;
-    max-width: 1400px;
-    margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+  padding: 1.5rem;
+  max-width: 1440px;
+  margin: 0 auto;
 }
+.grid .wide { grid-column: span 2; }
 
+/* ── Cards ───────────────────────────────────────────────────────────── */
 .card {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 12px;
-    padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.4rem;
+  box-shadow: var(--shadow);
+  transition: border-color 0.2s, transform 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--green), transparent);
+  opacity: 0.5;
+}
+.card:hover { border-color: #3d444e; transform: translateY(-1px); }
+.card-title {
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 1rem;
 }
 
-.card h2 {
-    margin-bottom: 1rem;
-    color: #3fb950;
+/* ── Health Score Gauge ──────────────────────────────────────────────── */
+.gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+.gauge-number {
+  font-size: 4.5rem; font-weight: 700; line-height: 1;
+  transition: color 0.5s; text-shadow: 0 0 30px currentColor;
+  letter-spacing: -2px;
 }
+.gauge-label { font-size: 0.9rem; font-weight: 600; letter-spacing: 2px; }
+.gauge-trend { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+.c-excellent { color: var(--green); }
+.c-good      { color: var(--blue);  }
+.c-stressed  { color: var(--orange);}
+.c-critical  { color: var(--red);   }
 
-.score-number {
-    font-size: 5rem;
-    font-weight: bold;
-    text-align: center;
-}
-
-.score-excellent {
-    color: #3fb950;
-}
-
-.score-good {
-    color: #58a6ff;
-}
-
-.score-stressed {
-    color: #f0883e;
-}
-
-.score-critical {
-    color: #f85149;
-}
-
+/* ── Sensor rows ─────────────────────────────────────────────────────── */
 .sensor-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.7rem 0;
-    border-bottom: 1px solid #21262d;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.6rem 0; border-bottom: 1px solid var(--border);
+}
+.sensor-row:last-child { border-bottom: none; }
+.sensor-label { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+.sensor-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+.sensor-bar {
+  width: 60px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;
+}
+.sensor-bar-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.5s; }
+
+/* ── Luna quote ──────────────────────────────────────────────────────── */
+.quote-box {
+  background: var(--green-dim);
+  border-left: 3px solid var(--green);
+  border-radius: 0 8px 8px 0;
+  padding: 0.9rem 1rem;
+  font-style: italic; color: #b3e8b9; line-height: 1.55;
+  font-size: 0.88rem;
+}
+.actions-list { margin-top: 0.8rem; }
+.action-item {
+  display: flex; align-items: flex-start; gap: 6px;
+  padding: 3px 0; color: var(--muted); font-size: 0.82rem;
 }
 
-.task {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0;
-    cursor: pointer;
-    transition: 0.2s;
-}
+/* ── Care plan tasks ─────────────────────────────────────────────────── */
+.plan-progress { margin-bottom: 1rem; }
+.progress-text { font-size: 0.75rem; color: var(--muted); margin-bottom: 4px; }
+.progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.5s; }
 
-.task:hover {
-    color: #3fb950;
+.period-label {
+  font-size: 0.65rem; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--muted);
+  margin: 0.6rem 0 0.3rem;
 }
-
-.task.done {
-    opacity: 0.5;
-    text-decoration: line-through;
+.task-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 5px 6px; border-radius: 6px;
+  cursor: pointer; transition: background 0.15s;
+  font-size: 0.82rem; line-height: 1.4;
 }
-
-.quote {
-    font-style: italic;
-    color: #3fb950;
-    padding: 1rem;
-    border-left: 3px solid #3fb950;
-    background: rgba(63,185,80,0.05);
+.task-item:hover { background: var(--surface2); }
+.task-item.done { opacity: 0.4; text-decoration: line-through; }
+.task-check { font-size: 0.9rem; margin-top: 1px; flex-shrink: 0; }
+.priority-badge {
+  font-size: 0.6rem; font-weight: 600; padding: 1px 5px;
+  border-radius: 4px; flex-shrink: 0; margin-top: 2px;
 }
+.p-high   { background: rgba(248,81,73,0.2);  color: var(--red);    }
+.p-medium { background: rgba(240,136,62,0.2); color: var(--orange); }
+.p-low    { background: rgba(88,166,255,0.2); color: var(--blue);   }
 
-.refresh-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #3fb950;
-    display: inline-block;
-    animation: pulse 2s infinite;
+/* ── Incidents ───────────────────────────────────────────────────────── */
+.incident-card {
+  border-left: 3px solid var(--orange);
+  padding: 0.6rem 0.8rem; margin: 0.4rem 0;
+  background: rgba(240,136,62,0.06); border-radius: 0 8px 8px 0;
 }
+.incident-title { font-weight: 600; font-size: 0.82rem; }
+.incident-meta  { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
 
-@keyframes pulse {
-    0%,100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.3;
-    }
+/* ── Stats rows ──────────────────────────────────────────────────────── */
+.stat-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.5rem 0; border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
 }
+.stat-row:last-child { border-bottom: none; }
+.stat-label { color: var(--muted); }
+.stat-value { font-weight: 600; font-variant-numeric: tabular-nums; }
 
-#scoreChart {
-    width: 100%;
-    height: 180px;
-    background: #0d1117;
-    border-radius: 8px;
+/* ── Mode badge ──────────────────────────────────────────────────────── */
+.mode-badge {
+  font-size: 0.65rem; font-weight: 600; padding: 2px 8px;
+  border-radius: 10px; display: inline-block; margin-left: 6px;
 }
+.mode-sim  { background: rgba(88,166,255,0.15); color: var(--blue);   border: 1px solid var(--blue); }
+.mode-real { background: rgba(63,185,80,0.15);  color: var(--green);  border: 1px solid var(--green); }
 
-.incident {
-    border-left: 3px solid #f0883e;
-    padding: 0.5rem;
-    margin: 0.5rem 0;
-    background: rgba(240,136,62,0.05);
-}
+/* ── Chart canvas ────────────────────────────────────────────────────── */
+.chart-wrap { position: relative; height: 180px; }
 
-small {
-    color: #8b949e;
-}
-
+/* ── Footer ──────────────────────────────────────────────────────────── */
 footer {
-    text-align: center;
-    color: #8b949e;
-    padding: 1rem;
+  text-align: center; padding: 1.5rem;
+  color: var(--muted); font-size: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+footer a { color: var(--green); text-decoration: none; }
+
+/* ── Alert bar ───────────────────────────────────────────────────────── */
+#alertBar {
+  display: none;
+  background: linear-gradient(90deg, #3a1010, #1a0a0a);
+  border-bottom: 1px solid var(--red);
+  padding: 0.6rem 2rem;
+  color: var(--red);
+  font-size: 0.82rem; font-weight: 500;
+  animation: alertBlink 2s infinite;
+}
+@keyframes alertBlink { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .grid .wide { grid-column: span 1; }
+  .header { flex-direction: column; text-align: center; }
 }
 </style>
 </head>
-
 <body>
 
+<!-- Alert bar (shown when there are active alerts) -->
+<div id="alertBar"></div>
+
+<!-- Header -->
 <div class="header">
-    <h1>🌱 Luna — AI Plant Care System</h1>
-    <p class="subtitle">
-        <span class="refresh-dot"></span>
-        Live Dashboard • Refreshes every 5 seconds
-    </p>
+  <div class="header-left">
+    <span class="logo">🌱</span>
+    <div>
+      <h1>Luna — AI Plant Care</h1>
+      <div class="subtitle">Autonomous Plant Intelligence System</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <span id="modeBadge" class="mode-badge mode-sim">SIMULATOR</span>
+    <div class="live-badge">
+      <span class="pulse-dot"></span> LIVE · 5s refresh
+    </div>
+  </div>
 </div>
 
+<!-- Main grid -->
 <div class="grid">
 
-    <!-- Health Score -->
-    <div class="card">
-        <h2>💚 Health Score</h2>
+  <!-- Health Score -->
+  <div class="card">
+    <div class="card-title">💚 Health Score</div>
+    <div class="gauge-wrap">
+      <div id="scoreNumber" class="gauge-number c-excellent">—</div>
+      <div id="scoreStatus" class="gauge-label" style="color:var(--muted)">—</div>
+      <div id="scoreTrend"  class="gauge-trend">—</div>
+    </div>
+  </div>
 
-        <div id="scoreNumber" class="score-number">—</div>
+  <!-- Sensor Readings -->
+  <div class="card">
+    <div class="card-title">📡 Sensor Readings</div>
 
-        <div id="scoreStatus"
-             style="text-align:center;font-size:1.2rem;">
-        </div>
-
-        <div id="scoreTrend"
-             style="text-align:center;color:#8b949e;margin-top:10px;">
-        </div>
+    <div class="sensor-row">
+      <span class="sensor-label">🌡️ Temperature</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="sensor-bar"><div id="barTemp" class="sensor-bar-fill" style="width:50%"></div></div>
+        <span id="sTemp" class="sensor-value">—</span>
+      </div>
     </div>
 
-    <!-- Sensor Readings -->
-    <div class="card">
-        <h2>📡 Sensor Readings</h2>
-
-        <div class="sensor-row">
-            <span>🌡️ Temperature</span>
-            <span id="sTemp">—</span>
-        </div>
-
-        <div class="sensor-row">
-            <span>💧 Humidity</span>
-            <span id="sHum">—</span>
-        </div>
-
-        <div class="sensor-row">
-            <span>🌬️ Air Quality</span>
-            <span id="sAqi">—</span>
-        </div>
-
-        <div class="sensor-row">
-            <span>🌧️ Rain</span>
-            <span id="sRain">—</span>
-        </div>
-
-        <div class="sensor-row">
-            <span>📊 Pressure</span>
-            <span id="sPres">—</span>
-        </div>
-
-        <div style="margin-top:10px;color:#8b949e;font-size:0.8rem;">
-            Last Update:
-            <span id="sTime">—</span>
-        </div>
+    <div class="sensor-row">
+      <span class="sensor-label">💧 Humidity</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="sensor-bar"><div id="barHum" class="sensor-bar-fill" style="width:50%"></div></div>
+        <span id="sHum"  class="sensor-value">—</span>
+      </div>
     </div>
 
-    <!-- Luna Says -->
-    <div class="card">
-        <h2>🌿 Luna Says</h2>
-
-        <div id="lunaMessage" class="quote">
-            Waiting for Luna's thoughts...
-        </div>
-
-        <div id="lunaActions"
-             style="margin-top:1rem;">
-        </div>
+    <div class="sensor-row">
+      <span class="sensor-label">🪴 Soil Moisture</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="sensor-bar"><div id="barSoil" class="sensor-bar-fill" style="width:50%"></div></div>
+        <span id="sSoil" class="sensor-value">—</span>
+      </div>
     </div>
 
-    <!-- Care Plan -->
-    <div class="card">
-        <h2>📅 Today's Care Plan</h2>
-
-        <div id="planSummary"
-             style="color:#8b949e;margin-bottom:1rem;">
-        </div>
-
-        <div id="taskList"></div>
+    <div class="sensor-row">
+      <span class="sensor-label">🌬️ Air Quality</span>
+      <span id="sAqi"  class="sensor-value">—</span>
     </div>
 
-    <!-- Health Trend -->
-    <div class="card">
-        <h2>📈 Health Trend</h2>
-
-        <canvas
-            id="scoreChart"
-            width="400"
-            height="180">
-        </canvas>
+    <div class="sensor-row">
+      <span class="sensor-label">🌧️ Rain</span>
+      <span id="sRain" class="sensor-value">—</span>
     </div>
 
-    <!-- Incidents -->
-    <div class="card">
-        <h2>🔄 Healing Incidents</h2>
-
-        <div id="incidentList">
-            No incidents recorded.
-        </div>
+    <div class="sensor-row">
+      <span class="sensor-label">📊 Pressure</span>
+      <span id="sPres" class="sensor-value">—</span>
     </div>
 
-    <!-- Daily Stats -->
-    <div class="card">
-        <h2>📊 Today's Stats</h2>
-
-        <div id="todayStats">
-            No data yet today.
-        </div>
+    <div style="margin-top:8px;color:var(--muted);font-size:0.72rem">
+      Updated: <span id="sTime">—</span>
     </div>
+  </div>
+
+  <!-- Luna Says -->
+  <div class="card">
+    <div class="card-title">🌿 Luna Says</div>
+    <div id="lunaMessage" class="quote-box">Waiting for Luna's thoughts...</div>
+    <div id="lunaActions" class="actions-list"></div>
+  </div>
+
+  <!-- Health Trend Chart -->
+  <div class="card wide">
+    <div class="card-title">📈 Health Score History</div>
+    <div class="chart-wrap">
+      <canvas id="scoreChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Today's Care Plan -->
+  <div class="card">
+    <div class="card-title">📅 Today's Care Plan</div>
+    <div id="planMeta" style="color:var(--muted);font-size:0.78rem;margin-bottom:0.8rem"></div>
+    <div class="plan-progress">
+      <div id="progressText" class="progress-text">0/0 tasks done</div>
+      <div class="progress-bar"><div id="progressFill" class="progress-fill" style="width:0%"></div></div>
+    </div>
+    <div id="taskList"></div>
+  </div>
+
+  <!-- Healing Incidents -->
+  <div class="card">
+    <div class="card-title">🔄 Healing Incidents</div>
+    <div id="incidentList" style="color:var(--muted);font-size:0.82rem">No incidents recorded.</div>
+  </div>
+
+  <!-- Today's Stats -->
+  <div class="card">
+    <div class="card-title">📊 Today's Statistics</div>
+    <div id="todayStats" style="color:var(--muted);font-size:0.82rem">No data yet.</div>
+  </div>
 
 </div>
 
 <footer>
-    Luna AI Plant Care Dashboard
+  🌱 Luna AI Plant Care System &nbsp;·&nbsp;
+  Powered by <a href="https://gemini.google.com" target="_blank">Gemini 2.5 Flash</a> &nbsp;·&nbsp;
+  Inspired by <a href="https://x.com/d33v33d0" target="_blank">Sol</a>
 </footer>
 
 <script>
-
-async function refresh() {
-
-    try {
-
-        const res = await fetch("/api/status");
-        const data = await res.json();
-
-        updateScore(data.last_ai_response);
-        updateSensors(data.latest_reading);
-        updateLunaQuote(data.last_ai_response);
-        updateCarePlan(data.care_plan);
-        updateIncidents(data.incidents);
-        updateStats(data.daily_summary,
-                    data.total_readings);
-
-        updateChart(data.recent_scores);
-
-    } catch (e) {
-
-        console.warn("Refresh failed:", e);
-
+// ── Chart.js setup ────────────────────────────────────────────────────────
+const ctx = document.getElementById('scoreChart').getContext('2d');
+const scoreChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Health Score',
+      data: [],
+      borderColor: '#3fb950',
+      backgroundColor: 'rgba(63,185,80,0.08)',
+      borderWidth: 2.5,
+      pointRadius: 3,
+      pointBackgroundColor: '#3fb950',
+      tension: 0.4,
+      fill: true,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#111418',
+        titleColor: '#e6edf3',
+        bodyColor: '#8b949e',
+        borderColor: '#21262d',
+        borderWidth: 1,
+      }
+    },
+    scales: {
+      y: {
+        min: 0, max: 100,
+        grid: { color: '#21262d' },
+        ticks: { color: '#8b949e', font: {size: 11} },
+      },
+      x: {
+        grid: { display: false },
+        ticks: { color: '#8b949e', font: {size: 10}, maxTicksLimit: 8 },
+      }
     }
+  }
+});
+
+// ── Refresh counter ───────────────────────────────────────────────────────
+let chartLabels = [];
+let chartData   = [];
+let readingCount = 0;
+
+// ── Main refresh function ─────────────────────────────────────────────────
+async function refresh() {
+  try {
+    const res  = await fetch('/api/status');
+    const data = await res.json();
+
+    updateAlerts(data.latest_reading, data.last_ai_response);
+    updateScore(data.last_ai_response);
+    updateSensors(data.latest_reading);
+    updateLunaQuote(data.last_ai_response);
+    updateCarePlan(data.care_plan);
+    updateIncidents(data.incidents);
+    updateStats(data.daily_summary, data.total_readings);
+    appendChartPoint(data.last_ai_response);
+    updateModeBadge(data.mode);
+
+  } catch(e) {
+    console.warn('Refresh failed:', e);
+  }
+}
+
+function updateAlerts(reading, ai) {
+  const bar = document.getElementById('alertBar');
+  const alerts = [];
+  if (reading) {
+    if (reading.temperature > 35) alerts.push(`🌡️ Heat emergency: ${reading.temperature}°C`);
+    if ((reading.soil_moisture || 55) < 20) alerts.push(`🪴 Drought: soil ${reading.soil_moisture}%`);
+  }
+  if (ai && ai.health_score < 30) alerts.push(`⚠️ Luna critical: score ${ai.health_score}/100`);
+  if (alerts.length) {
+    bar.style.display = 'block';
+    bar.textContent = '🚨 ' + alerts.join('  ·  ');
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function updateModeBadge(mode) {
+  const badge = document.getElementById('modeBadge');
+  if (!mode) return;
+  if (mode === 'hardware') {
+    badge.textContent = 'REAL HARDWARE';
+    badge.className = 'mode-badge mode-real';
+  } else {
+    badge.textContent = 'SIMULATOR';
+    badge.className = 'mode-badge mode-sim';
+  }
+}
+
+function scoreClass(score) {
+  if (score >= 85) return 'c-excellent';
+  if (score >= 70) return 'c-good';
+  if (score >= 40) return 'c-stressed';
+  return 'c-critical';
 }
 
 function updateScore(ai) {
-
-    if (!ai || !ai.health_score) return;
-
-    const score = ai.health_score;
-
-    const el = document.getElementById("scoreNumber");
-
-    el.textContent = score + "/100";
-
-    el.className =
-        "score-number " +
-        (
-            score >= 85 ? "score-excellent" :
-            score >= 70 ? "score-good" :
-            score >= 40 ? "score-stressed" :
-            "score-critical"
-        );
-
-    document.getElementById("scoreStatus").textContent =
-        (ai.status || "").toUpperCase();
-
+  if (!ai || ai.health_score == null) return;
+  const score = ai.health_score;
+  const el    = document.getElementById('scoreNumber');
+  el.textContent = score + '/100';
+  el.className   = 'gauge-number ' + scoreClass(score);
+  document.getElementById('scoreStatus').textContent = (ai.status || '').replace('_',' ').toUpperCase();
+  document.getElementById('scoreStatus').style.color = score >= 85 ? 'var(--green)'
+    : score >= 70 ? 'var(--blue)' : score >= 40 ? 'var(--orange)' : 'var(--red)';
 }
 
 function updateSensors(r) {
-
-    if (!r) return;
-
-    document.getElementById("sTemp").textContent =
-        (r.temperature ?? "--") + "°C";
-
-    document.getElementById("sHum").textContent =
-        (r.humidity ?? "--") + "%";
-
-    document.getElementById("sAqi").textContent =
-        (r.air_quality ?? "--") + " ppm";
-
-    document.getElementById("sRain").textContent =
-        r.rain === 1 ? "🌧️ Rain" : "☀️ Dry";
-
-    document.getElementById("sPres").textContent =
-        (r.pressure ?? "--") + " hPa";
-
-    document.getElementById("sTime").textContent =
-        r.timestamp || "—";
-
+  if (!r) return;
+  document.getElementById('sTemp').textContent  = r.temperature + '°C';
+  document.getElementById('sHum').textContent   = r.humidity    + '%';
+  document.getElementById('sSoil').textContent  = (r.soil_moisture ?? '—') + '%';
+  document.getElementById('sAqi').textContent   = r.air_quality + ' ppm';
+  document.getElementById('sRain').textContent  = r.rain === 1 ? '🌧️ Rain' : '☀️ Dry';
+  document.getElementById('sPres').textContent  = r.pressure + ' hPa';
+  document.getElementById('sTime').textContent  = r.timestamp || '—';
+  // Progress bars (0–100 mapped to width %)
+  document.getElementById('barTemp').style.width  = Math.min(100, Math.max(0, (r.temperature / 50) * 100)) + '%';
+  document.getElementById('barHum').style.width   = r.humidity + '%';
+  document.getElementById('barSoil').style.width  = (r.soil_moisture ?? 55) + '%';
 }
 
 function updateLunaQuote(ai) {
-
-    if (!ai) return;
-
-    document.getElementById("lunaMessage").textContent =
-        '"' + (ai.message || "No message available") + '"';
-
-    const actions =
-        (ai.actions || [])
-        .map(a => `<div>• ${a}</div>`)
-        .join("");
-
-    document.getElementById("lunaActions").innerHTML =
-        actions;
-
+  if (!ai) return;
+  document.getElementById('lunaMessage').textContent = '"' + (ai.message || 'Monitoring my environment...') + '"';
+  const acts = (ai.actions || []).map(a => `<div class="action-item"><span>→</span>${a}</div>`).join('');
+  document.getElementById('lunaActions').innerHTML = acts;
 }
 
 function updateCarePlan(plan) {
+  if (!plan || !plan.tasks) {
+    document.getElementById('planMeta').textContent = 'No plan generated yet.';
+    return;
+  }
+  const tasks = plan.tasks;
+  const done  = tasks.filter(t => t.done).length;
+  const total = tasks.length;
+  const pct   = total ? Math.round((done/total)*100) : 0;
 
-    if (!plan || !plan.tasks) {
+  document.getElementById('planMeta').textContent = plan.summary || '';
+  document.getElementById('progressText').textContent = `${done}/${total} tasks done`;
+  document.getElementById('progressFill').style.width = pct + '%';
 
-        document.getElementById("planSummary")
-            .textContent =
-            "No plan for today.";
-
-        document.getElementById("taskList")
-            .innerHTML = "";
-
-        return;
-    }
-
-    const done =
-        plan.tasks.filter(t => t.done).length;
-
-    const total =
-        plan.tasks.length;
-
-    document.getElementById("planSummary")
-        .textContent =
-        `${plan.summary || ""} (${done}/${total} done)`;
-
-    const html =
-        plan.tasks.map((t, i) => `
-            <div class="task ${t.done ? "done" : ""}"
-                 onclick="markDone(${i})">
-                <span>${t.done ? "✅" : "⬜"}</span>
-                <span>
-                    [${(t.priority || "").toUpperCase()}]
-                    ${t.action}
-                </span>
-            </div>
-        `).join("");
-
-    document.getElementById("taskList")
-        .innerHTML = html;
+  const periods = ['morning','afternoon','evening'];
+  const periodIcons = { morning:'🌅', afternoon:'🌞', evening:'🌙' };
+  let html = '';
+  for (const period of periods) {
+    const pts = tasks.filter(t => t.time === period);
+    if (!pts.length) continue;
+    html += `<div class="period-label">${periodIcons[period]} ${period}</div>`;
+    pts.forEach((t, i) => {
+      const idx = tasks.indexOf(t);
+      const pcls = t.priority === 'high' ? 'p-high' : t.priority === 'low' ? 'p-low' : 'p-medium';
+      html += `
+        <div class="task-item ${t.done?'done':''}" onclick="markDone(${idx})">
+          <span class="task-check">${t.done?'✅':'⬜'}</span>
+          <span class="priority-badge ${pcls}">${(t.priority||'').toUpperCase()}</span>
+          <span>${t.action}</span>
+        </div>`;
+    });
+  }
+  document.getElementById('taskList').innerHTML = html;
 }
 
 function updateIncidents(incidents) {
-
-    if (!incidents || incidents.length === 0) {
-
-        document.getElementById("incidentList")
-            .textContent =
-            "No incidents recorded.";
-
-        return;
-    }
-
-    const html =
-        incidents
-        .slice(-5)
-        .reverse()
-        .map(inc => `
-            <div class="incident">
-                <strong>${inc.trigger}</strong>
-                <br>
-
-                Score:
-                ${inc.score_at_start}/100
-
-                <br>
-
-                <small>
-                    Started:
-                    ${inc.started_at}
-                </small>
-
-                <br>
-
-                <small>
-                ${
-                    inc.resolved_at
-                    ? "✅ Resolved: " + inc.resolved_at
-                    : "⏳ Active"
-                }
-                </small>
-            </div>
-        `)
-        .join("");
-
-    document.getElementById("incidentList")
-        .innerHTML = html;
+  const el = document.getElementById('incidentList');
+  if (!incidents || !incidents.length) {
+    el.innerHTML = '<span style="color:var(--muted)">No healing incidents recorded.</span>';
+    return;
+  }
+  el.innerHTML = incidents.slice(-5).reverse().map(inc => `
+    <div class="incident-card">
+      <div class="incident-title">${inc.trigger.replace('_',' ').toUpperCase()}
+        <span style="font-weight:400;color:var(--muted)"> — ${inc.score_at_start}/100</span>
+      </div>
+      <div class="incident-meta">
+        Started: ${inc.started_at}<br>
+        ${inc.resolved_at ? '✅ Resolved: ' + inc.resolved_at : '⏳ Active'}
+      </div>
+    </div>`).join('');
 }
 
-function updateStats(dailySummaries,
-                     totalReadings) {
-
-    const today =
-        new Date()
-        .toISOString()
-        .split("T")[0];
-
-    const summary =
-        (dailySummaries || {})[today];
-
-    if (!summary) {
-
-        document.getElementById("todayStats")
-            .textContent =
-            "No data yet today.";
-
-        return;
-    }
-
-    document.getElementById("todayStats")
-        .innerHTML = `
-        <div class="sensor-row">
-            <span>Avg Temperature</span>
-            <span>${summary.avg_temperature}°C</span>
-        </div>
-
-        <div class="sensor-row">
-            <span>Avg Humidity</span>
-            <span>${summary.avg_humidity}%</span>
-        </div>
-
-        <div class="sensor-row">
-            <span>Avg Air Quality</span>
-            <span>${summary.avg_air_quality} ppm</span>
-        </div>
-
-        <div class="sensor-row">
-            <span>Rain Events</span>
-            <span>${summary.rain_events}</span>
-        </div>
-
-        <div class="sensor-row">
-            <span>Total Readings</span>
-            <span>${totalReadings}</span>
-        </div>
-    `;
+function updateStats(dailySummaries, totalReadings) {
+  const today   = new Date().toISOString().split('T')[0];
+  const summary = (dailySummaries||{})[today];
+  const el      = document.getElementById('todayStats');
+  if (!summary) {
+    el.innerHTML = '<span style="color:var(--muted)">No data collected yet today.</span>';
+    return;
+  }
+  el.innerHTML = [
+    ['Avg Temperature', summary.avg_temperature + '°C'],
+    ['Avg Humidity',    summary.avg_humidity    + '%'],
+    ['Avg Air Quality', summary.avg_air_quality + ' ppm'],
+    ['Rain Events',     summary.rain_events],
+    ['Total Readings',  totalReadings],
+  ].map(([l,v]) => `
+    <div class="stat-row">
+      <span class="stat-label">${l}</span>
+      <span class="stat-value">${v}</span>
+    </div>`).join('');
 }
 
-function updateChart(scores) {
-
-    const canvas =
-        document.getElementById("scoreChart");
-
-    if (!canvas ||
-        !scores ||
-        scores.length === 0) {
-        return;
-    }
-
-    const ctx =
-        canvas.getContext("2d");
-
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-    ctx.beginPath();
-
-    scores.forEach((score, i) => {
-
-        const x =
-            (i / (scores.length - 1 || 1))
-            * canvas.width;
-
-        const y =
-            canvas.height -
-            (score / 100)
-            * canvas.height;
-
-        if (i === 0)
-            ctx.moveTo(x, y);
-        else
-            ctx.lineTo(x, y);
-    });
-
-    ctx.strokeStyle = "#3fb950";
-    ctx.lineWidth = 3;
-    ctx.stroke();
+function appendChartPoint(ai) {
+  if (!ai || ai.health_score == null) return;
+  const label = new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+  chartLabels.push(label);
+  chartData.push(ai.health_score);
+  if (chartLabels.length > 40) { chartLabels.shift(); chartData.shift(); }
+  scoreChart.data.labels  = chartLabels;
+  scoreChart.data.datasets[0].data = chartData;
+  scoreChart.update('none');   // 'none' = skip animation on update
 }
 
 async function markDone(index) {
-
-    await fetch(
-        "/api/mark_done/" + index,
-        {
-            method: "POST"
-        }
-    );
-
-    refresh();
+  await fetch('/api/mark_done/' + index, { method: 'POST' });
+  refresh();
 }
 
+// ── Start ─────────────────────────────────────────────────────────────────
 refresh();
-
-setInterval(
-    refresh,
-    5000
-);
-
+setInterval(refresh, 5000);
 </script>
-
 </body>
 </html>
