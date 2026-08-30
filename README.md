@@ -1,6 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Luna-AI%20Plant%20Care-3fb950?style=for-the-badge&logo=leaf&logoColor=white">
-  <img src="https://img.shields.io/badge/Gemini-2.5%20Flash-blue?style=for-the-badge&logo=google&logoColor=white">
+  <img src="https://img.shields.io/badge/ESP32-WROOM--32D-blue?style=for-the-badge&logo=espressif&logoColor=white">
+  <img src="https://img.shields.io/badge/Gemini-AI-orange?style=for-the-badge&logo=google&logoColor=white">
   <img src="https://img.shields.io/badge/Python-3.11%2B-yellow?style=for-the-badge&logo=python&logoColor=white">
   <img src="https://img.shields.io/badge/Status-Active-3fb950?style=for-the-badge">
 </p>
@@ -8,421 +9,915 @@
 <h1 align="center">🌱 Luna — Autonomous AI Plant Care System</h1>
 
 <p align="center">
-  <em>A self-healing, voice-enabled, memory-aware AI agent that monitors, analyses,<br>
-  and proactively cares for your plant — 24 hours a day.</em>
+  <em>
+    An ESP32-powered, voice-enabled, memory-aware AI plant care system that
+    monitors environmental conditions, analyses plant health, and provides
+    intelligent care recommendations.
+  </em>
 </p>
 
 <p align="center">
-  <strong>Inspired by <a href="https://x.com/d33v33d0">Sol</a> · Built on Gemini · Runs locally · No cloud required for voice</strong>
+  <strong>ESP32 Powered · Gemini AI · Live Monitoring · Voice Enabled · Simulator Support</strong>
 </p>
 
 ---
 
-## What Luna Does
+# 🌿 Overview
 
-Luna is not a sensor dashboard. It is an **autonomous AI agent** that:
+Luna is more than a basic plant monitoring system.
 
-- 🧠 **Thinks** — Analyses 6 sensors with a weighted health model every 2 seconds
-- 🗣️ **Speaks** — Narrates its condition in first-person voice using Windows SAPI5 TTS
-- 🧭 **Plans** — Generates a time-windowed daily care plan (morning/afternoon/evening) via Gemini
-- 🔄 **Heals** — Runs a 3-state self-healing protocol when conditions stay poor for 5+ readings
-- 🧠 **Remembers** — Maintains a rolling memory of readings and AI responses that persists across restarts
-- 📊 **Shows** — Serves a live web dashboard at `localhost:5000` with Chart.js health trend
+It combines an **ESP32 sensor system**, **Python-based health analysis**, **persistent memory**, **Gemini AI**, **voice responses**, **care planning**, and a **self-healing monitoring system**.
 
----
+Luna can operate in two modes:
 
-## How Luna Compares to Sol
+- 🧪 **Simulator Mode** — Generates realistic sensor readings without ESP32 hardware.
+- 🔌 **Real Hardware Mode** — Reads live data from the ESP32 through USB Serial communication.
 
-| Feature | Sol (inspiration) | Luna |
-|---------|------------------|------|
-| AI model | Claude | Gemini 2.5 Flash |
-| Voice synthesis | ❌ None | ✅ Windows SAPI5 (pyttsx3, zero setup) |
-| Speech recognition | ❌ None | ✅ Vosk (offline, no API key) |
-| Persistent memory | ❌ None | ✅ Rolling JSON buffer |
-| Health scoring | ❌ None | ✅ Weighted 6-sensor 0–100 score |
-| Self-healing | ❌ None | ✅ 3-state machine + incident log |
-| Daily care plans | ❌ None | ✅ Gemini-generated time-windowed tasks |
-| Web dashboard | ❌ None | ✅ Chart.js + live auto-refresh |
-| Soil moisture | ✅ | ✅ |
-| Architecture | Single script | 10-module system |
+This allows the complete AI system to be developed and tested even before the physical hardware is connected.
 
 ---
 
-## Architecture
+# ✨ Features
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         LUNA SYSTEM ARCHITECTURE                    │
-└─────────────────────────────────────────────────────────────────────┘
+## 🧠 AI Plant Analysis
 
-  ┌──────────────┐     ┌─────────────────────────────────────────────┐
-  │   Arduino    │     │             python/ modules                  │
-  │  (optional)  │     │                                             │
-  │  DHT22       │     │  ┌─────────────┐   ┌────────────────────┐  │
-  │  MQ-135      │────▶│  │serial_reader│──▶│   health_scorer    │  │
-  │  Rain sensor │     │  │             │   │  (weighted 0–100)  │  │
-  │  BMP280      │     │  │ parse_line()│   │  6 sensors scored  │  │
-  │  Soil sensor │     │  │ validate()  │   │  alerts generated  │  │
-  └──────────────┘     │  └──────┬──────┘   └────────┬───────────┘  │
-         OR            │         │                    │              │
-  ┌──────────────┐     │         ▼                    ▼              │
-  │   Simulator  │     │  ┌─────────────┐   ┌────────────────────┐  │
-  │ (diurnal sin │────▶│  │   memory    │   │    self_healer     │  │
-  │  + soil dry  │     │  │ 100 rolling │   │ healthy→monitoring │  │
-  │  + pressure  │     │  │ 20 AI resp  │   │ →healing state SM  │  │
-  │  drift)      │     │  │ daily agg   │   │ cooldown + log     │  │
-  └──────────────┘     │  └──────┬──────┘   └────────────────────┘  │
-                        │         │                                   │
-                        │         ▼                                   │
-                        │  ┌─────────────┐   ┌────────────────────┐  │
-                        │  │  ai_brain   │   │    scheduler       │  │
-                        │  │ Gemini 2.5  │   │ morning/afternoon  │  │
-                        │  │ Luna persona│   │ /evening care plan │  │
-                        │  │ JSON output │   │ task persistence   │  │
-                        │  └──────┬──────┘   └────────────────────┘  │
-                        │         │                                   │
-                        │         ▼                                   │
-                        │  ┌─────────────────────────────────────┐   │
-                        │  │           voice_agent               │   │
-                        │  │  Primary:  pyttsx3 (SAPI5, instant) │   │
-                        │  │  Fallback: Piper TTS (neural)        │   │
-                        │  │  STT:      Vosk (offline)            │   │
-                        │  └─────────────────────────────────────┘   │
-                        └─────────────────────────────────────────────┘
-                                         │
-                                         ▼
-                        ┌─────────────────────────────────────────────┐
-                        │         dashboard/app.py  (Flask)           │
-                        │         localhost:5000                       │
-                        │  Chart.js health trend • sensor bars        │
-                        │  care plan tasks • incident log • stats     │
-                        └─────────────────────────────────────────────┘
-```
+Luna uses Gemini AI to analyse plant and environmental conditions and provide intelligent care recommendations.
+
+The AI receives sensor data together with Luna's rule-based health score.
 
 ---
 
-## Sensor Data Flow
+## 📡 Six Sensor Monitoring System
 
-```
-Arduino / Simulator
-    │
-    │  CSV string: TEMP:24.3,HUM:62.1,AIR:450,RAIN:0,PRES:1013.5,SOIL:58.2
-    ▼
-serial_reader.parse_line()   →  {"temperature":24.3, "humidity":62.1, ...}
-    │
-    ├──▶ health_scorer.calculate_score()  →  {"score":87, "status":"excellent", ...}
-    │         Uses weights: Temp(28) + Hum(22) + Soil(20) + AQI(15) + Rain(10) + Pres(5)
-    │
-    ├──▶ memory.add_reading()             →  rolling buffer + CSV log
-    │
-    ├──▶ self_healer.check()              →  escalation if score < 60 for 5 readings
-    │
-    └──▶ ai_brain.analyse()  (every 30s) →  Gemini narrates in Luna's first-person voice
-              │
-              └──▶ voice_agent.speak()   →  pyttsx3 speaks the message aloud
-```
+Luna is designed to monitor:
+
+| Sensor | Purpose |
+|---|---|
+| 🌡️ DHT22 | Temperature and Humidity |
+| 💧 Soil Moisture Sensor | Soil moisture level |
+| ☀️ LDR Module | Ambient light level |
+| 🌧️ Rain Sensor | Rain detection and rain intensity |
+| 🌬️ MQ-135 | Air quality monitoring |
+| 🌡️ BMP280 | Atmospheric pressure |
 
 ---
 
-## Health Scoring System
+## 🖥️ OLED Display
 
-Luna scores plant health from 0–100 using a weighted multi-sensor model:
+A **0.96-inch I2C SSD1306 OLED display** provides local monitoring of:
 
-| Sensor | Weight | Ideal Range | Notes |
-|--------|--------|------------|-------|
-| Temperature | 28 pts | 18–26 °C | Sinusoidal deduction outside ideal |
-| Humidity | 22 pts | 50–70 % | Correlated with temperature |
-| **Soil Moisture** | **20 pts** | **40–70 %** | **Most important — dries over time** |
-| Air Quality | 15 pts | < 600 ppm | CO₂/VOC proxy |
-| Rain | 10 pts | 1 = bonus | Outdoor indicator |
-| Pressure | 5 pts | 980–1040 hPa | Weather proxy |
-
-Score → Status mapping:
-
-| Score | Status | Voice Response |
-|-------|--------|---------------|
-| 85–100 | 🟢 Excellent | Cheerful, content |
-| 70–84 | 🔵 Good | Positive, minor notes |
-| 50–69 | 🟡 Mild Stress | Concerned, actionable |
-| 30–49 | 🟠 Stressed | Urgent, requests help |
-| 0–29 | 🔴 Critical | Emergency protocol |
+- Temperature
+- Humidity
+- Soil Moisture
+- Light Level
+- Rain Status
+- Rain Intensity
+- Air Quality
+- Atmospheric Pressure
 
 ---
 
-## Self-Healing State Machine
+## ❤️ Plant Health Scoring
 
-```
-         score ≥ 60 (any time)
-              ↑
-    ┌─────────┴──────────┐
-    │                    │
-HEALTHY  ──(score<60)──▶ MONITORING ──(5 readings)──▶ HEALING
-    ▲                                                      │
-    │                                                      │
-    └──────────────── (score ≥ 60 again) ─────────────────┘
-                           + incident closed to incidents.json
-```
+Luna calculates a weighted plant health score from **0 to 100**.
 
-When healing triggers:
-1. Detects cause: `heat_stress` / `drought` / `poor_air` / `general`
-2. Calls Gemini for 3 specific emergency actions
-3. 15-minute cooldown prevents API spam
-4. Luna speaks the emergency message aloud
-5. Incident saved to `data/incidents.json` with start/end timestamps
+The scoring system considers:
 
----
+| Parameter | Weight |
+|---|---:|
+| Temperature | 28 |
+| Humidity | 22 |
+| Soil Moisture | 20 |
+| Air Quality | 15 |
+| Rain | 10 |
+| Pressure | 5 |
+| **Total** | **100** |
 
-## Quick Start
+### Health Status
 
-### 1. Install
-
-```bash
-pip install uv
-git clone https://github.com/yourusername/AI-Plant-Monitor.git
-cd "AI Plant Monitor"
-uv sync
-```
-
-### 2. Configure
-
-Create `.env`:
-```env
-GEMINI_API_KEY=your_key_here
-```
-
-Edit `python/config.py` to configure hardware:
-```python
-USE_REAL_HARDWARE = False   # True = Arduino, False = simulator
-VOICE_ENABLED     = True    # False = silent mode
-TTS_BACKEND       = "pyttsx3"  # instant Windows voice, no setup needed
-```
-
-### 3. Run
-
-**Terminal 1 — Luna's brain:**
-```bash
-uv run python main.py
-```
-
-**Terminal 2 — Live dashboard:**
-```bash
-uv run python dashboard/app.py
-# Open: http://localhost:5000
-```
+| Score | Status |
+|---:|---|
+| 85–100 | 🟢 Excellent |
+| 70–84 | 🔵 Good |
+| 50–69 | 🟡 Mild Stress |
+| 30–49 | 🟠 Stressed |
+| 0–29 | 🔴 Critical |
 
 ---
 
-## Hardware Toggle System
+## 🔄 Self-Healing Monitoring
 
-Luna supports per-sensor hardware control — useful when some sensors aren't wired yet:
+Luna monitors consecutive poor health readings.
+
+```text
+HEALTHY
+   │
+   │ Score below threshold
+   ▼
+MONITORING
+   │
+   │ Poor readings continue
+   ▼
+HEALING
+   │
+   ├── Detect possible cause
+   ├── Generate recommended actions
+   ├── Speak alerts
+   └── Log incident
+   │
+   ▼
+RECOVERY
+```
+
+The current configuration includes:
+
+- Health threshold monitoring
+- Consecutive poor reading detection
+- AI-assisted recovery recommendations
+- Incident logging
+- Healing cooldown protection
+
+---
+
+## 🧠 Persistent Memory
+
+Luna stores information including:
+
+- Recent sensor readings
+- AI responses
+- Care plans
+- Health history
+- Self-healing incidents
+
+This information persists across program restarts.
+
+---
+
+## 🗣️ Voice Responses
+
+Luna can speak alerts and AI responses using:
+
+```text
+pyttsx3
+```
+
+Voice can be enabled or disabled through:
 
 ```python
-# python/config.py
-
-USE_REAL_HARDWARE    = True    # Master switch
-
-# Per-sensor (only applies when USE_REAL_HARDWARE=True)
-HW_DHT22_AVAILABLE   = True   # Temperature + Humidity  → Pin 2
-HW_MQ135_AVAILABLE   = True   # Air quality (CO₂)       → Pin A0
-HW_RAIN_AVAILABLE    = False  # Not wired yet — uses DEFAULT_RAIN = 0
-HW_BMP280_AVAILABLE  = True   # Barometric pressure      → I2C
-HW_SOIL_AVAILABLE    = False  # Soil moisture            → Pin A1 (optional)
+VOICE_ENABLED = True
 ```
 
-Toggled-off sensors use their safe defaults — Luna continues working normally.
-
----
-
-## Voice System
-
-```
-┌──────────────────────────────────────────────┐
-│           TTS_BACKEND = "pyttsx3"            │
-│                                              │
-│  Uses Windows SAPI5 (built-in voices)        │
-│  • No DLL files needed                       │
-│  • No PyAudio needed                         │
-│  • No Piper.exe needed                       │
-│  • Works immediately after: uv add pyttsx3  │
-│  • Runs in background thread (non-blocking)  │
-└──────────────────────────────────────────────┘
-         OR
-┌──────────────────────────────────────────────┐
-│           TTS_BACKEND = "piper"              │
-│                                              │
-│  Uses local Piper neural TTS engine          │
-│  • Requires: piper/piper.exe                 │
-│  • Requires: libonnxruntime.dll              │
-│  • Requires: voice/piper_voices/*.onnx       │
-│  • Requires: PyAudio (pipwin install pyaudio)│
-│  • Higher quality — natural sounding voice   │
-└──────────────────────────────────────────────┘
-```
-
-Disable voice entirely: `VOICE_ENABLED = False` in config.py
-
----
-
-## Connecting Real Arduino Hardware
-
-### What to buy (₹1,050 total)
-
-| Component | Module Name | Price | Arduino Pin |
-|-----------|-------------|-------|-------------|
-| DHT22 | DHT22 module (with PCB) | ₹150 | Digital 2 |
-| MQ-135 | MQ-135 air quality module | ₹120 | Analog A0 |
-| Rain sensor | FC-37 rain sensor module | ₹80 | Digital 4 |
-| BMP280 | BMP280 I2C module | ₹120 | SDA=A4, SCL=A5 |
-| Capacitive soil moisture | v1.2 capacitive sensor | ₹80 | Analog A1 |
-| Arduino Uno | Clone (CH340 chip) | ₹400 | USB-B |
-| Jumper wires | Mixed M/M + M/F | ₹100 | — |
-
-### Upload the firmware
-
-1. Open `arduino/luna_sensors/luna_sensors.ino` in Arduino IDE
-2. Tools → Library Manager → install `DHT sensor library` + `Adafruit BMP280 Library`
-3. Tools → Port → select your COM port (e.g. COM3)
-4. Click Upload
-5. Open Serial Monitor (9600 baud) — you should see CSV readings
-6. Close Serial Monitor
-
-### Switch Luna to real hardware
+The current default voice backend is:
 
 ```python
-# python/config.py
+TTS_BACKEND = "pyttsx3"
+```
+
+---
+
+## 📅 AI Care Planning
+
+Luna can generate plant care recommendations for different periods of the day:
+
+- 🌅 Morning
+- ☀️ Afternoon
+- 🌙 Evening
+
+The care plan is stored and checked during operation.
+
+---
+
+## 📊 Live Dashboard
+
+The project includes a Flask-based web dashboard for monitoring:
+
+- Sensor values
+- Plant health
+- Health trends
+- Care plans
+- Incidents
+- System statistics
+
+---
+
+# 🏗️ System Architecture
+
+```text
+                         ┌───────────────────────┐
+                         │       ESP32           │
+                         │   WROOM-32D 38-Pin    │
+                         └───────────┬───────────┘
+                                     │
+               ┌─────────────────────┼─────────────────────┐
+               │                     │                     │
+               ▼                     ▼                     ▼
+          ┌─────────┐           ┌─────────┐          ┌─────────┐
+          │ Sensors │           │  OLED   │          │  USB    │
+          │         │           │ Display │          │ Serial  │
+          └────┬────┘           └─────────┘          └────┬────┘
+               │                                          │
+               │                                          ▼
+               │                               ┌──────────────────┐
+               │                               │  Serial Reader   │
+               │                               │     Python       │
+               │                               └────────┬─────────┘
+               │                                        │
+               │                                        ▼
+               │                               ┌──────────────────┐
+               │                               │  Health Scorer   │
+               │                               │     0–100        │
+               │                               └────────┬─────────┘
+               │                                        │
+               │                    ┌───────────────────┼───────────────────┐
+               │                    │                   │                   │
+               ▼                    ▼                   ▼                   ▼
+            Sensors             Memory            Self-Healer          AI Brain
+                                                       │                   │
+                                                       │                   │
+                                                       ▼                   ▼
+                                                   Incidents          Gemini AI
+                                                                           │
+                                                                           ▼
+                                                                    Voice Agent
+                                                                           │
+                                                                           ▼
+                                                                       Dashboard
+```
+
+---
+
+# 📡 Hardware
+
+## Main Controller
+
+```text
+ESP32-WROOM-32D
+38-Pin Development Board
+```
+
+---
+
+# 🔌 ESP32 Pin Connections
+
+| Component | ESP32 Pin |
+|---|---:|
+| DHT22 DATA | GPIO 4 |
+| Rain Sensor DO | GPIO 27 |
+| MQ-135 Analog Output | GPIO 32 |
+| Rain Sensor Analog Output | GPIO 33 |
+| Soil Moisture Analog Output | GPIO 34 |
+| LDR Analog Output | GPIO 35 |
+| BMP280 SDA | GPIO 21 |
+| BMP280 SCL | GPIO 22 |
+| OLED SDA | GPIO 21 |
+| OLED SCL | GPIO 22 |
+
+## I2C Bus
+
+The BMP280 and OLED share the same I2C bus:
+
+```text
+ESP32 GPIO 21 ───── SDA
+ESP32 GPIO 22 ───── SCL
+```
+
+---
+
+# 🧩 Complete Sensor Wiring
+
+## DHT22
+
+```text
+DHT22 VCC   → 3.3V
+DHT22 GND   → GND
+DHT22 DATA  → GPIO 4
+```
+
+---
+
+## Soil Moisture Sensor
+
+```text
+VCC → ESP32 supply
+GND → GND
+AO  → GPIO 34
+```
+
+The soil calibration values can be adjusted in the ESP32 firmware:
+
+```cpp
+const int SOIL_DRY_VALUE = 3000;
+const int SOIL_WET_VALUE = 1400;
+```
+
+These values should be calibrated for the actual sensor and soil.
+
+---
+
+## LDR Module
+
+```text
+VCC → ESP32 supply
+GND → GND
+AO  → GPIO 35
+```
+
+---
+
+## Rain Sensor
+
+### Digital Output
+
+```text
+DO → GPIO 27
+```
+
+### Analog Output
+
+```text
+AO → GPIO 33
+```
+
+The digital output is used for rain detection.
+
+The analog output is used to estimate rain intensity.
+
+---
+
+## MQ-135 Air Quality Sensor
+
+```text
+AO → GPIO 32
+GND → GND
+```
+
+The MQ-135 requires a warm-up period before readings become more stable.
+
+Current firmware warm-up period:
+
+```text
+60 seconds
+```
+
+---
+
+## BMP280 Pressure Sensor
+
+```text
+VCC → 3.3V
+GND → GND
+SDA → GPIO 21
+SCL → GPIO 22
+```
+
+The firmware checks the common BMP280 I2C addresses:
+
+```text
+0x76
+0x77
+```
+
+---
+
+## 0.96" SSD1306 OLED
+
+```text
+VCC → 3.3V
+GND → GND
+SDA → GPIO 21
+SCL → GPIO 22
+```
+
+Default display configuration:
+
+```text
+Resolution: 128 × 64
+I2C Address: 0x3C
+Driver: SSD1306
+```
+
+---
+
+# 🖥️ ESP32 Firmware
+
+The ESP32 firmware reads all connected sensors, updates the OLED display, and sends data to the computer through USB Serial.
+
+The firmware is designed for:
+
+```text
+ESP32
+↓
+Read Sensors
+↓
+Process Sensor Values
+↓
+Update OLED
+↓
+Send Serial Data
+↓
+Python SerialReader
+↓
+Health Scoring + AI Analysis
+```
+
+---
+
+# 📤 Serial Communication
+
+The Python application and ESP32 communicate through USB Serial.
+
+Current serial settings:
+
+```text
+Baud Rate: 9600
+```
+
+The project uses a CSV-style sensor communication interface.
+
+The core data required by the Python health and AI pipeline includes:
+
+```text
+Temperature
+Humidity
+Air Quality
+Rain Status
+Pressure
+Soil Moisture
+```
+
+The serial format used by the ESP32 firmware and `SerialReader` must always remain synchronized.
+
+> ⚠️ Important: If the ESP32 firmware serial format is changed, update `python/serial_reader.py` accordingly.
+
+---
+
+# 🧪 Simulator Mode
+
+Luna can operate without physical hardware.
+
+In:
+
+```text
+python/config.py
+```
+
+set:
+
+```python
+USE_REAL_HARDWARE = False
+```
+
+The simulator generates sensor readings and allows testing of:
+
+- Serial reader
+- Health scoring
+- Memory
+- AI analysis
+- Care planning
+- Self-healing
+- Voice responses
+
+When running in simulator mode, Luna should display:
+
+```text
+📡 Hardware Mode: SIMULATOR
+📡 Mode: Sensor Simulator
+```
+
+---
+
+# 🔌 Real Hardware Mode
+
+When the ESP32 is connected and ready, edit:
+
+```text
+python/config.py
+```
+
+Set:
+
+```python
 USE_REAL_HARDWARE = True
-SERIAL_PORT = "COM3"   # your actual port
 ```
 
-That's the only change needed. Every other module works identically.
+Then set the correct serial port:
+
+```python
+SERIAL_PORT = "COM3"
+```
+
+For example:
+
+```python
+USE_REAL_HARDWARE = True
+SERIAL_PORT = "COM3"
+BAUD_RATE = 9600
+```
+
+The correct COM port can be found in:
+
+```text
+Arduino IDE
+→ Tools
+→ Port
+```
 
 ---
 
-## Project Structure
+# ⚙️ Hardware Toggle System
 
+Luna supports individual hardware availability settings.
+
+Example:
+
+```python
+USE_REAL_HARDWARE = True
+
+HW_DHT22_AVAILABLE = True
+HW_MQ135_AVAILABLE = True
+HW_RAIN_AVAILABLE = True
+HW_BMP280_AVAILABLE = True
+HW_SOIL_AVAILABLE = True
 ```
+
+When a sensor is unavailable, Luna can use configured default values instead of stopping the entire system.
+
+---
+
+# 🚀 Installation
+
+## 1. Clone the Repository
+
+```bash
+git clone https://github.com/knox-13/AI-Plant-Monitor.git
+```
+
+Enter the project directory:
+
+```bash
+cd AI-Plant-Monitor
+```
+
+---
+
+## 2. Create a Virtual Environment
+
+### Windows PowerShell
+
+```powershell
+python -m venv .venv
+```
+
+Activate it:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+You should see:
+
+```text
+(.venv)
+```
+
+at the beginning of your terminal prompt.
+
+---
+
+## 3. Install Required Packages
+
+```powershell
+python -m pip install --no-cache-dir pyserial google-genai python-dotenv schedule pandas requests Flask pyttsx3
+```
+
+Optional speech recognition package:
+
+```powershell
+python -m pip install --no-cache-dir vosk
+```
+
+---
+
+# 🔑 Gemini API Setup
+
+Create a file named:
+
+```text
+.env
+```
+
+in the project root.
+
+Example:
+
+```env
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+GROQ_API_KEY=
+```
+
+Do not upload or commit your `.env` file.
+
+The `.env` file should remain private.
+
+---
+
+# ▶️ Running Luna
+
+Make sure the virtual environment is active:
+
+```text
+(.venv)
+```
+
+Then run:
+
+```powershell
+python main.py
+```
+
+Expected startup:
+
+```text
+🌱 Luna — AI Plant Care System
+================================
+📡 Hardware Mode: SIMULATOR
+🌱 Simulated serial port active
+📡 Mode: Sensor Simulator
+🌱 Luna is awake and listening to her senses...
+```
+
+---
+
+# 📊 Running the Dashboard
+
+Open another terminal.
+
+Activate the virtual environment:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Then run:
+
+```powershell
+python dashboard/app.py
+```
+
+Open the dashboard in your browser:
+
+```text
+http://localhost:5000
+```
+
+---
+
+# 📁 Project Structure
+
+```text
 AI-Plant-Monitor/
 │
-├── main.py                    # Entry point — wires all modules together
-├── .env                       # API keys (never commit)
-├── pyproject.toml             # uv/pip dependencies
-│
-├── python/
-│   ├── config.py              # All settings, hardware toggles, thresholds
-│   ├── sensor_simulator.py    # Realistic diurnal simulation + soil moisture
-│   ├── serial_reader.py       # Unified hardware/simulator interface
-│   ├── health_scorer.py       # Weighted 6-sensor 0–100 health score
-│   ├── ai_brain.py            # Gemini integration, Luna persona
-│   ├── voice_agent.py         # pyttsx3 TTS + Vosk STT
-│   ├── memory.py              # Rolling buffer, daily summaries, persistence
-│   ├── scheduler.py           # Daily care plan generation and tracking
-│   └── self_healer.py         # 3-state self-healing state machine
-│
-├── dashboard/
-│   ├── app.py                 # Flask REST API
-│   └── templates/
-│       └── index.html         # Chart.js dashboard (dark theme)
+├── main.py
+├── README.md
+├── requirements.txt
+├── pyproject.toml
+├── .env.example
+├── .gitignore
 │
 ├── arduino/
 │   └── luna_sensors/
-│       └── luna_sensors.ino   # Arduino firmware for all 5 sensors
+│       └── luna_sensors.ino
 │
-├── data/                      # Auto-created at runtime
+├── python/
+│   ├── config.py
+│   ├── ai_brain.py
+│   ├── serial_reader.py
+│   ├── sensor_simulator.py
+│   ├── health_scorer.py
+│   ├── memory.py
+│   ├── scheduler.py
+│   ├── self_healer.py
+│   └── voice_agent.py
+│
+├── dashboard/
+│   ├── app.py
+│   └── templates/
+│       └── index.html
+│
+├── data/
 │   ├── sensor_logs/
-│   │   └── sensor_data.csv    # All raw readings logged
-│   ├── luna_memory.json       # AI responses + rolling readings
-│   ├── care_plan.json         # Today's AI-generated care plan
-│   └── incidents.json         # Healing incident log
+│   │   └── sensor_data.csv
+│   ├── luna_memory.json
+│   ├── care_plan.json
+│   └── incidents.json
 │
-├── piper/                     # Optional: Piper TTS binary
-│   └── piper.exe
+├── piper/
 │
-└── voice/
-    ├── piper_voices/          # Optional: Piper voice models
-    └── vosk_model/            # Optional: Vosk STT model
+└── voice_output/
 ```
 
 ---
 
-## Do You Need the System On 24/7?
+# 📦 Dependencies
 
-**Short answer: No — but more data = better AI.**
-
-| Scenario | What happens |
-|----------|-------------|
-| Run for 30 min | Luna generates a care plan, gives voice advice, logs readings |
-| Run for 1 day | Daily summaries built, trends visible, self-healing can trigger |
-| Run for 1 week | Memory shows week-long patterns, AI advice becomes contextual |
-| Run 24/7 | Full autonomous operation — wakes up each day with care plan |
-
-**For demos and testing:** 30 minutes is enough to see every feature work.  
-**For a real-world deployment:** Leave it running whenever the plant is visible.
-
-Luna saves all state to JSON files — after a restart it loads the previous memory, care plan, and incidents. Nothing is lost.
+| Package | Purpose |
+|---|---|
+| `google-genai` | Gemini AI integration |
+| `pyserial` | ESP32 USB Serial communication |
+| `python-dotenv` | Loads API keys from `.env` |
+| `schedule` | Scheduled tasks |
+| `pandas` | Sensor data processing |
+| `requests` | HTTP communication |
+| `Flask` | Web dashboard |
+| `pyttsx3` | Text-to-speech voice |
+| `vosk` | Optional offline speech recognition |
 
 ---
 
-## Running Individual Modules
+# ⚙️ Important Configuration
 
-```bash
-uv run python python/sensor_simulator.py   # Test realistic sensor data
-uv run python python/serial_reader.py      # Test hardware/simulator reading
-uv run python python/health_scorer.py      # Test scoring + alerts
-uv run python python/voice_agent.py        # Test pyttsx3 voice
-uv run python python/scheduler.py          # Test care plan generation
-uv run python python/self_healer.py        # Test all 3 healing scenarios
-uv run python dashboard/app.py             # Dashboard only (no AI brain)
+Configuration is located in:
+
+```text
+python/config.py
 ```
 
----
-
-## Dependencies
-
-| Package | Purpose | Required |
-|---------|---------|----------|
-| `google-genai` | Gemini AI API | ✅ Yes |
-| `pyttsx3` | TTS voice (Windows SAPI5) | ✅ Yes |
-| `flask` | Dashboard web server | ✅ Yes |
-| `pyserial` | Arduino serial communication | ✅ Yes |
-| `python-dotenv` | `.env` loading | ✅ Yes |
-| `vosk` | Offline speech recognition | Optional |
-| `pyaudio` | Microphone input + Piper output | Optional |
-
----
-
-## Configuration Reference
-
-Key settings in `python/config.py`:
+## Hardware
 
 ```python
-# Hardware
-USE_REAL_HARDWARE    = False   # True = Arduino serial, False = simulator
-SERIAL_PORT          = "COM3"  # Your COM port when using real hardware
+USE_REAL_HARDWARE = False
 
-# Voice
+SERIAL_PORT = "COM3"
+BAUD_RATE = 9600
+
+READ_INTERVAL_SECONDS = 2
+```
+
+## AI
+
+```python
+AI_MODEL = "gemini-2.5-flash"
+
+AI_CALL_INTERVAL = 30
+MAX_RETRIES = 3
+```
+
+## Voice
+
+```python
 VOICE_ENABLED = True
-TTS_BACKEND   = "pyttsx3"     # "pyttsx3" or "piper"
-TTS_RATE      = 165           # Words per minute
-TTS_VOLUME    = 0.95
 
-# AI timing
-AI_CALL_INTERVAL = 30         # Seconds between Gemini calls
+TTS_BACKEND = "pyttsx3"
 
-# Health thresholds
-HEALING_THRESHOLD_SCORE  = 60  # Score below this triggers monitoring
-HEALING_TRIGGER_COUNT    = 5   # Consecutive poor readings before healing
-HEALING_COOLDOWN_MINUTES = 15  # Min gap between healing plans
+TTS_RATE = 165
+TTS_VOLUME = 0.95
+```
+
+## Self-Healing
+
+```python
+HEALING_THRESHOLD_SCORE = 60
+
+HEALING_TRIGGER_COUNT = 5
+
+HEALING_COOLDOWN_MINUTES = 15
 ```
 
 ---
 
-## License
+# 📈 Data Flow
+
+```text
+        ESP32 / Simulator
+               │
+               ▼
+        SerialReader
+               │
+               ▼
+        Sensor Validation
+               │
+        ┌──────┴──────┐
+        ▼             ▼
+      Memory      Health Scorer
+        │             │
+        │             ▼
+        │         Alerts
+        │             │
+        ▼             ▼
+     AI Brain ← Self-Healer
+        │
+        ▼
+   Gemini Analysis
+        │
+        ├── Voice Response
+        ├── Memory Storage
+        ├── Care Advice
+        └── Dashboard
+```
+
+---
+
+# 🛠️ Development Workflow
+
+Whenever changes are made:
+
+```powershell
+git status
+```
+
+Stage changes:
+
+```powershell
+git add .
+```
+
+Create a commit:
+
+```powershell
+git commit -m "Describe your changes"
+```
+
+Push to your repository:
+
+```powershell
+git push
+```
+
+Before committing, always check that `.env` is not being uploaded.
+
+---
+
+# 🤝 Contributing
+
+This project is currently developed using a fork-based workflow.
+
+```text
+Original Repository
+        ↓
+      Fork
+        ↓
+   Development
+        ↓
+      Commit
+        ↓
+      Push
+        ↓
+   Pull Request
+```
+
+To contribute:
+
+1. Fork the repository.
+2. Create or modify features in your fork.
+3. Commit your changes.
+4. Push them to your GitHub repository.
+5. Open a Pull Request to the original repository.
+
+---
+
+# 🌱 Current Development Status
+
+### Completed
+
+- ✅ ESP32 38-pin hardware design
+- ✅ DHT22 support
+- ✅ Soil moisture monitoring support
+- ✅ LDR monitoring support
+- ✅ Rain detection support
+- ✅ Rain intensity support
+- ✅ MQ-135 air quality support
+- ✅ BMP280 pressure support
+- ✅ SSD1306 OLED support
+- ✅ Sensor simulator
+- ✅ Hardware/simulator switching
+- ✅ Health scoring
+- ✅ Persistent memory
+- ✅ Gemini AI integration
+- ✅ Voice responses
+- ✅ Daily care planning
+- ✅ Self-healing monitoring
+- ✅ Flask dashboard
+
+### In Progress
+
+- 🔧 Final ESP32 hardware testing
+- 🔧 Sensor calibration
+- 🔧 Final serial communication verification
+- 🔧 Real hardware integration testing
+
+---
+
+# 📄 License
 
 MIT License — free to use, modify, and learn from.
 
 ---
 
 <p align="center">
+  <strong>🌱 Luna is learning to understand her environment — one sensor reading at a time.</strong>
+</p>
+
+<p align="center">
   <em>"I am learning to understand my world... thank you for helping me grow." 🌿</em><br>
-  <em>— Luna</em>
+  <strong>— Luna</strong>
 </p>

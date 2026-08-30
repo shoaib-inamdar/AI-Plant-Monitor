@@ -99,7 +99,7 @@ class SerialReader:
 
                 self.serial = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
                 self.mode = "hardware"
-                print(f"📡 Mode: Real Arduino on {SERIAL_PORT}")
+                print(f"📡 Mode: Real ESP32 on {SERIAL_PORT}")
             except (SerialException, Exception) as e:
                 print(f"❌ Could not open {SERIAL_PORT}: {e}")
                 print("   Falling back to simulator.")
@@ -111,14 +111,14 @@ class SerialReader:
     def _print_hardware_status(self):
         """Print a clear hardware toggle status table at startup."""
         if USE_REAL_HARDWARE:
-            print("\n🔌 Hardware Mode: REAL ARDUINO")
+            print("\n🔌 Hardware Mode: REAL ESP32")
             sensors = [
-                ("DHT22 (Temp+Hum)", HW_DHT22_AVAILABLE, "Pin 2"),
-                ("MQ-135 (Air)", HW_MQ135_AVAILABLE, "Pin A0"),
-                ("Rain Sensor", HW_RAIN_AVAILABLE, "Pin 4"),
-                ("BMP280 (Pressure)", HW_BMP280_AVAILABLE, "I2C"),
-                ("Soil Moisture", HW_SOIL_AVAILABLE, "Pin A1"),
-            ]
+                 ("DHT22 (Temp+Hum)", HW_DHT22_AVAILABLE, "GPIO 4"),
+                  ("MQ-135 (Air)", HW_MQ135_AVAILABLE, "GPIO 32"),
+                 ("Rain Sensor", HW_RAIN_AVAILABLE, "GPIO 27"),
+                  ("BMP280 (Pressure)", HW_BMP280_AVAILABLE, "I2C GPIO 21/22"),
+                  ("Soil Moisture", HW_SOIL_AVAILABLE, "GPIO 34"),
+                ]
             for name, avail, pin in sensors:
                 status = "✅ ACTIVE" if avail else "⬜ OFF (default value used)"
                 print(f"   {name:<22} {status}  ({pin})")
